@@ -10,13 +10,17 @@ import (
 	"github.com/solidk-tech/pixie-block/internal/ledger"
 )
 
-func BuildInitialState(genesis config.Genesis, keystore config.Keystore) (*ledger.State, error) {
+func BuildInitialState(genesis config.Genesis, keystore config.Keystore, taxes config.Taxes) (*ledger.State, error) {
+	if err := taxes.Validate(genesis.AllowedTaxAccounts); err != nil {
+		return nil, fmt.Errorf("taxes: %w", err)
+	}
+
 	allowed := make([]domain.AccountID, len(genesis.AllowedTaxAccounts))
 	for i, id := range genesis.AllowedTaxAccounts {
 		allowed[i] = domain.AccountID(id)
 	}
 
-	state := ledger.NewState(domain.AccountID(genesis.TaxTreasury), allowed)
+	state := ledger.NewState(domain.AccountID(genesis.TaxTreasury), allowed, taxes)
 
 	for _, acct := range genesis.Accounts {
 		state.SetBalance(domain.AccountID(acct.ID), acct.Balance, acct.Currency)

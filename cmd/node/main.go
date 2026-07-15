@@ -38,6 +38,7 @@ func main() {
 		genesisPath  = flag.String("genesis", "config/genesis.json", "genesis file path")
 		keystorePath = flag.String("keystore", "config/keystore.json", "keystore file path")
 		validatorKey = flag.String("validator-key", "config/validator-key.json", "validator key file path")
+		taxesPath    = flag.String("taxes", "config/taxes.json", "taxes file path")
 		apiAddr      = flag.String("api-addr", ":8080", "HTTP API listen address")
 		p2pListen    = flag.String("p2p-listen", ":9000", "P2P listen address")
 		nodeID       = flag.String("node-id", "node-1", "node identifier")
@@ -60,6 +61,12 @@ func main() {
 	} else {
 		log.Printf("Keystore file loaded successfully")
 	}
+	taxes, err := config.LoadTaxes(*taxesPath)
+	if err != nil {
+		log.Fatalf("load taxes: %v", err)
+	} else {
+		log.Printf("Taxes file loaded successfully")
+	}
 
 	validatorID, validatorKeyB64, err := loadValidatorKey(*validatorKey)
 	if err != nil {
@@ -76,8 +83,7 @@ func main() {
 	}
 	defer store.Close()
 
-	
-	state, err := node.BuildInitialState(genesis, keystore)
+	state, err := node.BuildInitialState(genesis, keystore, taxes)
 	if err != nil {
 		log.Fatalf("build state: %v", err)
 	} else {

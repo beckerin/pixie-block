@@ -9,6 +9,7 @@ import (
 
 	bolt "go.etcd.io/bbolt"
 
+	"github.com/solidk-tech/pixie-block/config"
 	"github.com/solidk-tech/pixie-block/internal/domain"
 	"github.com/solidk-tech/pixie-block/internal/ledger"
 )
@@ -105,6 +106,7 @@ type persistedState struct {
 	Accounts        map[domain.AccountID]domain.Account `json:"accounts"`
 	TaxTreasury     domain.AccountID                    `json:"tax_treasury"`
 	AllowedTaxAccts []domain.AccountID                  `json:"allowed_tax_accounts"`
+	Taxes           config.Taxes                        `json:"taxes"`
 }
 
 func (s *Store) SaveState(state *ledger.State) error {
@@ -117,6 +119,7 @@ func (s *Store) SaveState(state *ledger.State) error {
 		Accounts:        state.Accounts,
 		TaxTreasury:     state.TaxTreasury,
 		AllowedTaxAccts: allowed,
+		Taxes:           config.Taxes{TaxSplit: state.TaxSplit},
 	}
 
 	data, err := json.Marshal(payload)
@@ -150,7 +153,7 @@ func (s *Store) LoadState() (*ledger.State, error) {
 		return nil, nil
 	}
 
-	state := ledger.NewState(payload.TaxTreasury, payload.AllowedTaxAccts)
+	state := ledger.NewState(payload.TaxTreasury, payload.AllowedTaxAccts, payload.Taxes)
 	for id, acct := range payload.Accounts {
 		state.Accounts[id] = acct
 	}

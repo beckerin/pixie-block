@@ -104,6 +104,7 @@ func (bc *Blockchain) validateChain(keystore config.Keystore) error {
 	state := ledger.NewState(
 		domain.AccountID(bc.genesis.TaxTreasury),
 		toAccountIDs(bc.genesis.AllowedTaxAccounts),
+		config.Taxes{TaxSplit: bc.state.TaxSplit},
 	)
 
 	for _, acct := range bc.genesis.Accounts {

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	"github.com/solidk-tech/pixie-block/internal/domain"
 )
 
 type ValidatorConfig struct {
@@ -24,6 +26,10 @@ type KeystoreEntry struct {
 
 type Keystore struct {
 	Entries []KeystoreEntry `json:"entries"`
+}
+
+type Taxes struct {
+	TaxSplit map[domain.TaxCode]domain.TaxSplit `json:"tax_splits"`
 }
 
 type Genesis struct {
@@ -80,6 +86,40 @@ func LoadKeystore(path string) (Keystore, error) {
 		return Keystore{}, fmt.Errorf("parse keystore: %w", err)
 	}
 	return keystore, nil
+}
+
+func LoadTaxes(path string) (Taxes, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return Taxes{}, fmt.Errorf("read taxes: %w", err)
+	}
+	var taxes Taxes
+	if err := json.Unmarshal(data, &taxes); err != nil {
+		return Taxes{}, fmt.Errorf("parse taxes: %w", err)
+	}
+	return taxes, nil
+}
+
+func (t Taxes) Validate(allowedTaxAccounts []string) error {
+	allowed := make(map[domain.AccountID]struct{}, len(allowedTaxAccounts))
+	for _, id := range allowedTaxAccounts {
+		allowed[domain.AccountID(id)] = struct{}{}
+	}
+	if len(t.TaxSplit) == 0 {
+		return fmt.Errorf("tax_splits must not be empty")
+	}
+	for code, split := range t.TaxSplit {
+		if split.RateBPS < 0 {
+			return fmt.Errorf("tax code %q: rate_bps cannot be negative", code)
+		}
+		if split.TaxAccount == "" {
+			return fmt.Errorf("tax code %q: tax_account is required", code)
+		}
+		if _, ok := allowed[split.TaxAccount]; !ok {
+			return fmt.Errorf("tax code %q: tax account %q is not in allowed_tax_accounts", code, split.TaxAccount)
+		}
+	}
+	return nil
 }
 
 func (k Keystore) PrivateKeyFor(accountID string) (string, bool) {

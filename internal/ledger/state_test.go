@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/solidk-tech/pixie-block/config"
 	"github.com/solidk-tech/pixie-block/internal/crypto"
 	"github.com/solidk-tech/pixie-block/internal/domain"
 	"github.com/solidk-tech/pixie-block/internal/ledger"
@@ -28,9 +29,9 @@ func TestApplyTransactionWithTaxAndDiscount(t *testing.T) {
 		Payer:     "merchant_001",
 		Payee:     "supplier_042",
 		Currency:  "BRL",
-		Items:     []domain.LineItem{{Description: "Serviço", Amount: 100000}},
-		TaxSplits: []domain.TaxSplit{{TaxCode: "ISS", RateBPS: 500, Amount: 5000, TaxAccount: "tax_treasury"}},
-		Discounts: []domain.Discount{{Code: "PIS_CREDIT", Amount: 1650, TaxAccount: "tax_treasury"}},
+		Items: []domain.LineItem{{Description: "Serviço", Amount: 100000,
+			TaxCodes:  []domain.TaxCode{"ICMS"},
+			Discounts: []domain.Discount{{Code: "PIS_CREDIT", Amount: 1650, TaxAccount: "tax_treasury"}}}},
 	})
 
 	if err := ledger.ApplyTransaction(tx, state); err != nil {
@@ -38,8 +39,8 @@ func TestApplyTransactionWithTaxAndDiscount(t *testing.T) {
 	}
 
 	assertBalance(t, state, "merchant_001", 900000)
-	assertBalance(t, state, "supplier_042", 93350)
-	assertBalance(t, state, "tax_treasury", 6650)
+	assertBalance(t, state, "supplier_042", 88350)
+	assertBalance(t, state, "tax_treasury", 11650)
 }
 
 func TestRejectNegativeNetToPayee(t *testing.T) {
@@ -51,31 +52,13 @@ func TestRejectNegativeNetToPayee(t *testing.T) {
 		Payer:     "merchant_001",
 		Payee:     "supplier_042",
 		Currency:  "BRL",
-		Items:     []domain.LineItem{{Description: "Serviço", Amount: 10000}},
-		TaxSplits: []domain.TaxSplit{{TaxCode: "ISS", Amount: 8000, TaxAccount: "tax_treasury"}},
-		Discounts: []domain.Discount{{Code: "PIS", Amount: 5000, TaxAccount: "tax_treasury"}},
+		Items: []domain.LineItem{{Description: "Serviço", Amount: 10000,
+			TaxCodes:  []domain.TaxCode{"ICMS"},
+			Discounts: []domain.Discount{{Code: "PIS", Amount: 9500, TaxAccount: "tax_treasury"}}}},
 	})
 
 	if err := ledger.ApplyTransaction(tx, state); err == nil {
 		t.Fatal("expected negative net to payee error")
-	}
-}
-
-func TestRejectInsufficientBalance(t *testing.T) {
-	state := newTestState(t)
-
-	tx := signTx(domain.PaymentTransaction{
-		ID:        "tx-broke",
-		Timestamp: time.Now().UTC(),
-		Payer:     "merchant_001",
-		Payee:     "supplier_042",
-		Currency:  "BRL",
-		Items:     []domain.LineItem{{Description: "Grande", Amount: 2000000}},
-		TaxSplits: []domain.TaxSplit{{TaxCode: "ISS", Amount: 0, TaxAccount: "tax_treasury"}},
-	})
-
-	if err := ledger.ApplyTransaction(tx, state); err == nil {
-		t.Fatal("expected insufficient balance error")
 	}
 }
 
@@ -88,8 +71,8 @@ func TestRejectUnauthorizedTaxAccount(t *testing.T) {
 		Payer:     "merchant_001",
 		Payee:     "supplier_042",
 		Currency:  "BRL",
-		Items:     []domain.LineItem{{Description: "Serviço", Amount: 1000}},
-		TaxSplits: []domain.TaxSplit{{TaxCode: "ISS", Amount: 100, TaxAccount: "other_tax"}},
+		Items: []domain.LineItem{{Description: "Serviço", Amount: 1000,
+			Discounts: []domain.Discount{{Code: "BAD", Amount: 100, TaxAccount: "other_tax"}}}},
 	})
 
 	if err := ledger.ApplyTransaction(tx, state); err == nil {
@@ -97,10 +80,36 @@ func TestRejectUnauthorizedTaxAccount(t *testing.T) {
 	}
 }
 
+func TestRejectInsufficientBalance(t *testing.T) {
+	state := newTestState(t)
+
+	tx := signTx(domain.PaymentTransaction{
+		ID:        "tx-broke",
+		Timestamp: time.Now().UTC(),
+		Payer:     "merchant_001",
+		Payee:     "supplier_042",
+		Currency:  "BRL",
+		Items: []domain.LineItem{{Description: "Grande", Amount: 2000000,
+			TaxCodes: []domain.TaxCode{"ICMS"},
+		}},
+	})
+
+	if err := ledger.ApplyTransaction(tx, state); err == nil {
+		t.Fatal("expected insufficient balance error")
+	}
+}
+
 func newTestState(t *testing.T) *ledger.State {
 	t.Helper()
 
-	state := ledger.NewState("tax_treasury", []domain.AccountID{"tax_treasury"})
+	state := ledger.NewState("tax_treasury", []domain.AccountID{"tax_treasury"}, config.Taxes{
+		TaxSplit: map[domain.TaxCode]domain.TaxSplit{
+			"ICMS": {
+				RateBPS:    1000,
+				TaxAccount: "tax_treasury",
+			},
+		},
+	})
 	state.SetBalance("tax_treasury", 0, "BRL")
 	state.SetBalance("merchant_001", 1000000, "BRL")
 	state.SetBalance("supplier_042", 0, "BRL")

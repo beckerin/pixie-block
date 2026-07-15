@@ -1,16 +1,19 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
 type LineItem struct {
-	Description string `json:"description"`
-	Amount      int64  `json:"amount"`
+	Description string     `json:"description"`
+	Amount      int64      `json:"amount"`
+	TaxCodes    []TaxCode  `json:"tax_codes"`
+	Discounts   []Discount `json:"discounts"`
 }
 
+type TaxCode string
 type TaxSplit struct {
-	TaxCode    string    `json:"tax_code"`
 	RateBPS    int64     `json:"rate_bps"`
-	Amount     int64     `json:"amount"`
 	TaxAccount AccountID `json:"tax_account"`
 }
 
@@ -27,8 +30,6 @@ type PaymentTransaction struct {
 	Payee     AccountID  `json:"payee"`
 	Currency  string     `json:"currency"`
 	Items     []LineItem `json:"items"`
-	TaxSplits []TaxSplit `json:"tax_splits"`
-	Discounts []Discount `json:"discounts"`
 	Signature []byte     `json:"signature,omitempty"`
 }
 
@@ -40,22 +41,42 @@ func (tx *PaymentTransaction) GrossAmount() int64 {
 	return total
 }
 
-func (tx *PaymentTransaction) TaxTotal() int64 {
+func (tx *PaymentTransaction) TaxTotal(taxes map[TaxCode]TaxSplit) int64 {
 	var total int64
-	for _, split := range tx.TaxSplits {
-		total += split.Amount
+	for _, item := range tx.Items {
+		total += item.TaxTotal(taxes)
 	}
 	return total
 }
 
 func (tx *PaymentTransaction) DiscountTotal() int64 {
 	var total int64
-	for _, d := range tx.Discounts {
-		total += d.Amount
+	for _, item := range tx.Items {
+		total += item.DiscountTotal()
 	}
 	return total
 }
 
-func (tx *PaymentTransaction) NetToPayee() int64 {
-	return tx.GrossAmount() - tx.TaxTotal() - tx.DiscountTotal()
+func (tx *PaymentTransaction) NetToPayee(taxes map[TaxCode]TaxSplit) int64 {
+	return tx.GrossAmount() - tx.TaxTotal(taxes) - tx.DiscountTotal()
+}
+
+func (i *LineItem) TaxTotal(taxes map[TaxCode]TaxSplit) int64 {
+	var total int64
+	for _, taxCode := range i.TaxCodes {
+		taxSplit, ok := taxes[taxCode]
+		if !ok {
+			continue
+		}
+		total += taxSplit.RateBPS * i.Amount / 10000
+	}
+	return total
+}
+
+func (i *LineItem) DiscountTotal() int64 {
+	var total int64
+	for _, discount := range i.Discounts {
+		total += discount.Amount
+	}
+	return total
 }

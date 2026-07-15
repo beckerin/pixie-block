@@ -8,22 +8,20 @@ import (
 )
 
 type unsignedTransaction struct {
-	ID        string             `json:"id"`
-	Timestamp string             `json:"timestamp"`
-	Payer     domain.AccountID   `json:"payer"`
-	Payee     domain.AccountID   `json:"payee"`
-	Currency  string             `json:"currency"`
-	Items     []domain.LineItem  `json:"items"`
-	TaxSplits []domain.TaxSplit  `json:"tax_splits"`
-	Discounts []domain.Discount  `json:"discounts"`
+	ID        string            `json:"id"`
+	Timestamp string            `json:"timestamp"`
+	Payer     domain.AccountID  `json:"payer"`
+	Payee     domain.AccountID  `json:"payee"`
+	Currency  string            `json:"currency"`
+	Items     []domain.LineItem `json:"items"`
 }
 
 type unsignedBlock struct {
-	Height       int64                        `json:"height"`
-	Timestamp    string                       `json:"timestamp"`
-	Transactions []unsignedTransaction        `json:"transactions"`
-	PreviousHash string                       `json:"previous_hash"`
-	Validator    string                       `json:"validator"`
+	Height       int64                 `json:"height"`
+	Timestamp    string                `json:"timestamp"`
+	Transactions []unsignedTransaction `json:"transactions"`
+	PreviousHash string                `json:"previous_hash"`
+	Validator    string                `json:"validator"`
 }
 
 func TransactionSignBytes(tx domain.PaymentTransaction) ([]byte, error) {
@@ -34,8 +32,6 @@ func TransactionSignBytes(tx domain.PaymentTransaction) ([]byte, error) {
 		Payee:     tx.Payee,
 		Currency:  tx.Currency,
 		Items:     tx.Items,
-		TaxSplits: tx.TaxSplits,
-		Discounts: tx.Discounts,
 	}
 	return json.Marshal(payload)
 }
@@ -50,8 +46,6 @@ func BlockSignBytes(block domain.Block) ([]byte, error) {
 			Payee:     tx.Payee,
 			Currency:  tx.Currency,
 			Items:     tx.Items,
-			TaxSplits: tx.TaxSplits,
-			Discounts: tx.Discounts,
 		}
 	}
 

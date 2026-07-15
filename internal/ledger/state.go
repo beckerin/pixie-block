@@ -4,25 +4,28 @@ import (
 	"crypto/ed25519"
 	"fmt"
 
+	"github.com/solidk-tech/pixie-block/config"
 	"github.com/solidk-tech/pixie-block/internal/crypto"
 	"github.com/solidk-tech/pixie-block/internal/domain"
 )
 
 type State struct {
 	Accounts         map[domain.AccountID]domain.Account
+	TaxSplit         map[domain.TaxCode]domain.TaxSplit
 	TaxTreasury      domain.AccountID
 	AllowedTaxAccts  map[domain.AccountID]struct{}
 	ValidatorPubKeys map[string]ed25519.PublicKey
 	accountPubKeys   map[string]ed25519.PublicKey
 }
 
-func NewState(taxTreasury domain.AccountID, allowedTax []domain.AccountID) *State {
+func NewState(taxTreasury domain.AccountID, allowedTax []domain.AccountID, taxes config.Taxes) *State {
 	allowed := make(map[domain.AccountID]struct{}, len(allowedTax))
 	for _, id := range allowedTax {
 		allowed[id] = struct{}{}
 	}
 	return &State{
 		Accounts:         make(map[domain.AccountID]domain.Account),
+		TaxSplit:         taxes.TaxSplit,
 		TaxTreasury:      taxTreasury,
 		AllowedTaxAccts:  allowed,
 		ValidatorPubKeys: make(map[string]ed25519.PublicKey),
@@ -31,7 +34,7 @@ func NewState(taxTreasury domain.AccountID, allowedTax []domain.AccountID) *Stat
 }
 
 func (s *State) Clone() *State {
-	clone := NewState(s.TaxTreasury, nil)
+	clone := NewState(s.TaxTreasury, nil, config.Taxes{TaxSplit: s.TaxSplit})
 	for id := range s.AllowedTaxAccts {
 		clone.AllowedTaxAccts[id] = struct{}{}
 	}
@@ -40,6 +43,9 @@ func (s *State) Clone() *State {
 	}
 	for id, pk := range s.ValidatorPubKeys {
 		clone.ValidatorPubKeys[id] = pk
+	}
+	for taxCode, split := range s.TaxSplit {
+		clone.TaxSplit[taxCode] = split
 	}
 	if s.accountPubKeys != nil {
 		for id, pk := range s.accountPubKeys {
@@ -86,6 +92,24 @@ func ValidateTransaction(tx domain.PaymentTransaction, state *State) error {
 		if item.Amount <= 0 {
 			return fmt.Errorf("line item amount must be positive")
 		}
+		for _, taxCode := range item.TaxCodes {
+			split, ok := state.TaxSplit[taxCode]
+			if !ok {
+				return fmt.Errorf("unknown tax code %q", taxCode)
+			}
+			if _, ok := state.AllowedTaxAccts[split.TaxAccount]; !ok {
+				return fmt.Errorf("tax account %q is not allowed", split.TaxAccount)
+			}
+		}
+
+		for _, discount := range item.Discounts {
+			if discount.Amount < 0 {
+				return fmt.Errorf("discount amount cannot be negative")
+			}
+			if _, ok := state.AllowedTaxAccts[discount.TaxAccount]; !ok {
+				return fmt.Errorf("discount tax account %q is not allowed", discount.TaxAccount)
+			}
+		}
 	}
 
 	gross := tx.GrossAmount()
@@ -93,27 +117,9 @@ func ValidateTransaction(tx domain.PaymentTransaction, state *State) error {
 		return fmt.Errorf("gross amount must be positive")
 	}
 
-	for _, split := range tx.TaxSplits {
-		if split.Amount < 0 {
-			return fmt.Errorf("tax split amount cannot be negative")
-		}
-		if _, ok := state.AllowedTaxAccts[split.TaxAccount]; !ok {
-			return fmt.Errorf("tax account %q is not allowed", split.TaxAccount)
-		}
-	}
-
-	for _, discount := range tx.Discounts {
-		if discount.Amount < 0 {
-			return fmt.Errorf("discount amount cannot be negative")
-		}
-		if _, ok := state.AllowedTaxAccts[discount.TaxAccount]; !ok {
-			return fmt.Errorf("discount tax account %q is not allowed", discount.TaxAccount)
-		}
-	}
-
-	taxTotal := tx.TaxTotal()
+	taxTotal := tx.TaxTotal(state.TaxSplit)
 	discountTotal := tx.DiscountTotal()
-	net := tx.NetToPayee()
+	net := tx.NetToPayee(state.TaxSplit)
 
 	if taxTotal+discountTotal+net != gross {
 		return fmt.Errorf("split mismatch: taxes(%d) + discounts(%d) + net(%d) != gross(%d)",
@@ -181,7 +187,7 @@ func ApplyTransaction(tx domain.PaymentTransaction, state *State) error {
 	}
 
 	gross := tx.GrossAmount()
-	net := tx.NetToPayee()
+	net := tx.NetToPayee(state.TaxSplit)
 
 	payer := state.Accounts[tx.Payer]
 	payer.Balance -= gross
@@ -191,22 +197,26 @@ func ApplyTransaction(tx domain.PaymentTransaction, state *State) error {
 	payee.Balance += net
 	state.Accounts[tx.Payee] = payee
 
-	for _, split := range tx.TaxSplits {
-		if split.Amount == 0 {
-			continue
-		}
-		taxAcct := state.Accounts[split.TaxAccount]
-		taxAcct.Balance += split.Amount
-		state.Accounts[split.TaxAccount] = taxAcct
-	}
+	for _, item := range tx.Items {
+		for _, taxCode := range item.TaxCodes {
+			split, ok := state.TaxSplit[taxCode]
+			if !ok {
+				return fmt.Errorf("unknown tax code %q", taxCode)
+			}
 
-	for _, discount := range tx.Discounts {
-		if discount.Amount == 0 {
-			continue
+			taxAcct := state.Accounts[split.TaxAccount]
+			taxAcct.Balance += split.RateBPS * item.Amount / 10000
+			state.Accounts[split.TaxAccount] = taxAcct
 		}
-		taxAcct := state.Accounts[discount.TaxAccount]
-		taxAcct.Balance += discount.Amount
-		state.Accounts[discount.TaxAccount] = taxAcct
+
+		for _, discount := range item.Discounts {
+			if discount.Amount == 0 {
+				continue
+			}
+			taxAcct := state.Accounts[discount.TaxAccount]
+			taxAcct.Balance += discount.Amount
+			state.Accounts[discount.TaxAccount] = taxAcct
+		}
 	}
 
 	return nil
