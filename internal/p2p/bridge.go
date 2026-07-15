@@ -1,0 +1,158 @@
+package p2p
+
+import (
+	"encoding/json"
+	"fmt"
+	"sync"
+
+	"github.com/solidk-tech/pixie-block/internal/chain"
+	"github.com/solidk-tech/pixie-block/internal/domain"
+	"github.com/solidk-tech/pixie-block/internal/mempool"
+)
+
+type Bridge struct {
+	chainID  string
+	nodeID   string
+	chain    *chain.Blockchain
+	mempool  *mempool.Pool
+	node     *Node
+	producer BlockProducer
+
+	mu sync.Mutex
+}
+
+type BlockProducer interface {
+	CanProduce(height int64) bool
+	CreateBlock(height int64, prev domain.Block, txs []domain.PaymentTransaction) (domain.Block, error)
+}
+
+func NewBridge(chainID, nodeID string, bc *chain.Blockchain, pool *mempool.Pool, producer BlockProducer, listenAddr string, peers []string) *Bridge {
+	b := &Bridge{
+		chainID:  chainID,
+		nodeID:   nodeID,
+		chain:    bc,
+		mempool:  pool,
+		producer: producer,
+	}
+	b.node = New(listenAddr, peers, b)
+	return b
+}
+
+func (b *Bridge) Start() error {
+	return b.node.Start()
+}
+
+func (b *Bridge) BroadcastTransaction(tx domain.PaymentTransaction) {
+	b.node.Broadcast(MsgNewTransaction, tx)
+}
+
+func (b *Bridge) BroadcastBlock(block domain.Block) {
+	b.node.Broadcast(MsgNewBlock, block)
+}
+
+func (b *Bridge) ChainID() string  { return b.chainID }
+func (b *Bridge) NodeID() string   { return b.nodeID }
+func (b *Bridge) CurrentHeight() int64 { return b.chain.Height() }
+
+func (b *Bridge) OnNewTransaction(data json.RawMessage) error {
+	var tx domain.PaymentTransaction
+	if err := json.Unmarshal(data, &tx); err != nil {
+		return err
+	}
+	if err := b.chain.ValidatePending(tx); err != nil {
+		return err
+	}
+	return b.mempool.Add(tx)
+}
+
+func (b *Bridge) OnNewBlock(data json.RawMessage) error {
+	var payload any
+	if err := json.Unmarshal(data, &payload); err != nil {
+		return err
+	}
+
+	switch blocks := payload.(type) {
+	case map[string]any:
+		if _, ok := blocks["blocks"]; ok {
+			var resp struct {
+				Blocks []domain.Block `json:"blocks"`
+			}
+			if err := json.Unmarshal(data, &resp); err != nil {
+				return err
+			}
+			return b.applyBlocks(resp.Blocks)
+		}
+	}
+
+	var block domain.Block
+	if err := json.Unmarshal(data, &block); err != nil {
+		return err
+	}
+	return b.applyBlocks([]domain.Block{block})
+}
+
+func (b *Bridge) OnGetBlocks(fromHeight int64) (json.RawMessage, error) {
+	blocks := b.chain.GetBlocksFrom(fromHeight)
+	resp := struct {
+		Blocks []domain.Block `json:"blocks"`
+	}{Blocks: blocks}
+	return json.Marshal(resp)
+}
+
+func (b *Bridge) applyBlocks(blocks []domain.Block) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	for _, block := range blocks {
+		if block.Height <= b.chain.Height() {
+			continue
+		}
+		if block.Height != b.chain.Height()+1 {
+			return fmt.Errorf("out of order block at height %d", block.Height)
+		}
+		if err := b.chain.AppendBlock(block); err != nil {
+			return err
+		}
+		ids := make([]string, len(block.Transactions))
+		for i, tx := range block.Transactions {
+			ids[i] = tx.ID
+		}
+		b.mempool.Remove(ids...)
+	}
+	return nil
+}
+
+func (b *Bridge) ProduceBlockIfReady() (domain.Block, bool, error) {
+	if b.producer == nil {
+		return domain.Block{}, false, nil
+	}
+
+	height := b.chain.Height() + 1
+	if !b.producer.CanProduce(height) {
+		return domain.Block{}, false, nil
+	}
+
+	txs := b.mempool.Peek(100)
+	if len(txs) == 0 {
+		return domain.Block{}, false, nil
+	}
+
+	prev := b.chain.LatestBlock()
+	block, err := b.producer.CreateBlock(height, prev, txs)
+	if err != nil {
+		return domain.Block{}, false, err
+	}
+
+	if err := b.chain.AppendBlock(block); err != nil {
+		return domain.Block{}, false, err
+	}
+
+	ids := make([]string, len(txs))
+	for i, tx := range txs {
+		ids[i] = tx.ID
+	}
+	b.mempool.Remove(ids...)
+
+	b.BroadcastBlock(block)
+	return block, true, nil
+}

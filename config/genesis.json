@@ -1,0 +1,31 @@
+{
+  "accounts": [
+    {
+      "balance": 0,
+      "currency": "BRL",
+      "id": "tax_treasury"
+    },
+    {
+      "balance": 1000000,
+      "currency": "BRL",
+      "id": "merchant_001"
+    },
+    {
+      "balance": 0,
+      "currency": "BRL",
+      "id": "supplier_042"
+    }
+  ],
+  "allowed_tax_accounts": [
+    "tax_treasury"
+  ],
+  "block_time_seconds": 5,
+  "chain_id": "pixie-mainnet-1",
+  "tax_treasury": "tax_treasury",
+  "validators": [
+    {
+      "id": "validator-1",
+      "public_key": "fOqy0is1TUlJHPyDdXV/Sf8ZaghZie8+lceZQqTZkdI="
+    }
+  ]
+}

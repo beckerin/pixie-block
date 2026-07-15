@@ -1,0 +1,92 @@
+package config
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+)
+
+type ValidatorConfig struct {
+	ID        string `json:"id"`
+	PublicKey string `json:"public_key"`
+}
+
+type AccountConfig struct {
+	ID       string `json:"id"`
+	Balance  int64  `json:"balance"`
+	Currency string `json:"currency"`
+}
+
+type KeystoreEntry struct {
+	AccountID  string `json:"account_id"`
+	PrivateKey string `json:"private_key"`
+}
+
+type Keystore struct {
+	Entries []KeystoreEntry `json:"entries"`
+}
+
+type Genesis struct {
+	ChainID            string            `json:"chain_id"`
+	BlockTimeSeconds   int               `json:"block_time_seconds"`
+	TaxTreasury        string            `json:"tax_treasury"`
+	AllowedTaxAccounts []string          `json:"allowed_tax_accounts"`
+	Validators         []ValidatorConfig `json:"validators"`
+	Accounts           []AccountConfig   `json:"accounts"`
+}
+
+type Config struct {
+	Genesis         Genesis
+	Keystore        Keystore
+	DataDir         string
+	APIAddr         string
+	P2PListen       string
+	Peers           []string
+	GenesisPath     string
+	KeystorePath    string
+	ValidatorID     string
+	ValidatorKeyB64 string
+	NodeID          string
+}
+
+func LoadGenesis(path string) (Genesis, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return Genesis{}, fmt.Errorf("read genesis: %w", err)
+	}
+	var genesis Genesis
+	if err := json.Unmarshal(data, &genesis); err != nil {
+		return Genesis{}, fmt.Errorf("parse genesis: %w", err)
+	}
+	if genesis.ChainID == "" {
+		return Genesis{}, fmt.Errorf("genesis chain_id is required")
+	}
+	if genesis.TaxTreasury == "" {
+		return Genesis{}, fmt.Errorf("genesis tax_treasury is required")
+	}
+	if len(genesis.AllowedTaxAccounts) == 0 {
+		genesis.AllowedTaxAccounts = []string{genesis.TaxTreasury}
+	}
+	return genesis, nil
+}
+
+func LoadKeystore(path string) (Keystore, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return Keystore{}, fmt.Errorf("read keystore: %w", err)
+	}
+	var keystore Keystore
+	if err := json.Unmarshal(data, &keystore); err != nil {
+		return Keystore{}, fmt.Errorf("parse keystore: %w", err)
+	}
+	return keystore, nil
+}
+
+func (k Keystore) PrivateKeyFor(accountID string) (string, bool) {
+	for _, entry := range k.Entries {
+		if entry.AccountID == accountID {
+			return entry.PrivateKey, true
+		}
+	}
+	return "", false
+}
