@@ -32,6 +32,7 @@ func (s *submitAdapter) SubmitTransaction(tx domain.PaymentTransaction) error {
 }
 
 func main() {
+	log.Printf("Starting Pixie Node")
 	var (
 		dataDir      = flag.String("data-dir", "./data", "data directory")
 		genesisPath  = flag.String("genesis", "config/genesis.json", "genesis file path")
@@ -49,32 +50,45 @@ func main() {
 	genesis, err := config.LoadGenesis(*genesisPath)
 	if err != nil {
 		log.Fatalf("load genesis: %v", err)
+	} else {
+		log.Printf("Genesis file loaded successfully")
 	}
 
 	keystore, err := config.LoadKeystore(*keystorePath)
 	if err != nil {
 		log.Fatalf("load keystore: %v", err)
+	} else {
+		log.Printf("Keystore file loaded successfully")
 	}
 
 	validatorID, validatorKeyB64, err := loadValidatorKey(*validatorKey)
 	if err != nil {
 		log.Fatalf("load validator key: %v", err)
+	} else {
+		log.Printf("Validator key file loaded successfully")
 	}
 
-	store, err := bolt.Open(*dataDir)
+	store, err := bolt.Open(*dataDir, log.Default())
 	if err != nil {
 		log.Fatalf("open store: %v", err)
+	} else {
+		log.Printf("Store opened successfully")
 	}
 	defer store.Close()
 
+	
 	state, err := node.BuildInitialState(genesis, keystore)
 	if err != nil {
 		log.Fatalf("build state: %v", err)
+	} else {
+		log.Printf("Initial state built successfully")
 	}
 
 	bc, err := chain.New(genesis, store, state, keystore)
 	if err != nil {
 		log.Fatalf("init chain: %v", err)
+	} else {
+		log.Printf("Chain initialized successfully with height %d", bc.Height())
 	}
 
 	pool := mempool.New()
@@ -82,11 +96,15 @@ func main() {
 	producer, err := poa.NewProducer(genesis, validatorID, validatorKeyB64)
 	if err != nil {
 		log.Fatalf("init producer: %v", err)
+	} else {
+		log.Printf("Producer initialized successfully")
 	}
 
 	bridge := p2p.NewBridge(genesis.ChainID, *nodeID, bc, pool, producer, *p2pListen, peers)
 	if err := bridge.Start(); err != nil {
 		log.Fatalf("start p2p: %v", err)
+	} else {
+		log.Printf("P2P started successfully")
 	}
 
 	adapter := &submitAdapter{bridge: bridge}
@@ -95,6 +113,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	log.Printf("Starting block production successfully")
 	go func() {
 		ticker := time.NewTicker(time.Duration(genesis.BlockTimeSeconds) * time.Second)
 		defer ticker.Stop()

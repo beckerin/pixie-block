@@ -3,6 +3,7 @@ package bolt
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -22,14 +23,18 @@ type Store struct {
 	db *bolt.DB
 }
 
-func Open(dataDir string) (*Store, error) {
+func Open(dataDir string, log *log.Logger) (*Store, error) {
 	if err := os.MkdirAll(dataDir, 0o755); err != nil {
 		return nil, fmt.Errorf("create data dir: %w", err)
+	} else {
+		log.Printf("Opening store: %s", dataDir)
 	}
 
 	db, err := bolt.Open(filepath.Join(dataDir, "pixie.db"), 0o600, nil)
 	if err != nil {
 		return nil, fmt.Errorf("open db: %w", err)
+	} else {
+		log.Printf("Store opened successfully")
 	}
 
 	store := &Store{db: db}
