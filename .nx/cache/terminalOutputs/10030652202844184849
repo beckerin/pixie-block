@@ -1,15 +1,0 @@
-> nx run pixie-block:generate
-
-Executing command: go generate
-no Go files in /Users/paiva/git/beckerin/pixie-block/pixie-block
-[1m[31mError: Command failed: go generate
-    at genericNodeError (node:internal/errors:984:15)
-    at wrappedFn (node:internal/errors:538:14)
-    at checkExecSyncError (node:child_process:891:11)
-    at execSync (node:child_process:963:15)
-    at executeCommand (/Users/paiva/git/beckerin/pixie-block/node_modules/@nx-go/nx-go/src/utils/execute-command.js:33:43)
-    at runExecutor (/Users/paiva/git/beckerin/pixie-block/node_modules/@nx-go/nx-go/src/executors/generate/executor.js:12:39)
-    at runExecutorInternal (/Users/paiva/git/beckerin/pixie-block/node_modules/nx/dist/src/command-line/run/run.js:99:19)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async /Users/paiva/git/beckerin/pixie-block/node_modules/nx/dist/src/command-line/run/run.js:177:44
-    at async handleErrors (/Users/paiva/git/beckerin/pixie-block/node_modules/nx/dist/src/utils/handle-errors.js:9:24)[39m[22m
