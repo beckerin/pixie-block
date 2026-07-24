@@ -9,7 +9,7 @@ test:
 genkeys:
 	go run ./tools/genkeys.go
 
-prepare: build
+prepare: genkeys build
 	./main \
 		--data-dir ./data/main \
 		--api-addr :80 \
