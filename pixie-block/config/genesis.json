@@ -1,0 +1,37 @@
+{
+  "accounts": [
+    {
+      "balance": 0,
+      "currency": "BRL",
+      "id": "federal_treasury"
+    },
+    {
+      "balance": 0,
+      "currency": "BRL",
+      "id": "sao_paulo_treasury"
+    },
+    {
+      "balance": 0,
+      "currency": "BRL",
+      "id": "merchant_001"
+    },
+    {
+      "balance": 10000,
+      "currency": "BRL",
+      "id": "person_001"
+    }
+  ],
+  "allowed_tax_accounts": [
+    "federal_treasury",
+    "sao_paulo_treasury"
+  ],
+  "block_time_seconds": 5,
+  "chain_id": "pixie-net-1",
+  "tax_treasury": "federal_treasury",
+  "validators": [
+    {
+      "id": "validator-1",
+      "public_key": "Ic9v7YOFg0LQXLQ7PHMj8RnxCf+6zBRcLLwvWO13R1Q="
+    }
+  ]
+}

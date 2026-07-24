@@ -1,0 +1,6 @@
+bin/
+data/
+config/validator-key.json
+config/keystore.json
+
+build/
