@@ -1,7 +1,7 @@
 package crypto
 
 import (
-	"github.com/solidk-tech/pixie-block/internal/domain"
+	"github.com/beckerin/pixie-block/internal/domain"
 )
 
 func BlockHash(block domain.Block) ([]byte, error) {

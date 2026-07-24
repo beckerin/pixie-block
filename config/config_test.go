@@ -3,8 +3,8 @@ package config_test
 import (
 	"testing"
 
-	"github.com/solidk-tech/pixie-block/config"
-	"github.com/solidk-tech/pixie-block/internal/domain"
+	"github.com/beckerin/pixie-block/config"
+	"github.com/beckerin/pixie-block/internal/domain"
 )
 
 func TestTaxesValidateRejectsDisallowedAccount(t *testing.T) {

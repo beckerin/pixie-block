@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/solidk-tech/pixie-block/internal/chain"
-	"github.com/solidk-tech/pixie-block/internal/domain"
-	"github.com/solidk-tech/pixie-block/internal/mempool"
+	"github.com/beckerin/pixie-block/internal/chain"
+	"github.com/beckerin/pixie-block/internal/domain"
+	"github.com/beckerin/pixie-block/internal/mempool"
 )
 
 type Bridge struct {
@@ -50,8 +50,8 @@ func (b *Bridge) BroadcastBlock(block domain.Block) {
 	b.node.Broadcast(MsgNewBlock, block)
 }
 
-func (b *Bridge) ChainID() string  { return b.chainID }
-func (b *Bridge) NodeID() string   { return b.nodeID }
+func (b *Bridge) ChainID() string      { return b.chainID }
+func (b *Bridge) NodeID() string       { return b.nodeID }
 func (b *Bridge) CurrentHeight() int64 { return b.chain.Height() }
 
 func (b *Bridge) OnNewTransaction(data json.RawMessage) error {

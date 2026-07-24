@@ -5,12 +5,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/solidk-tech/pixie-block/config"
-	"github.com/solidk-tech/pixie-block/internal/crypto"
-	"github.com/solidk-tech/pixie-block/internal/domain"
-	"github.com/solidk-tech/pixie-block/internal/ledger"
-	"github.com/solidk-tech/pixie-block/internal/node"
-	"github.com/solidk-tech/pixie-block/internal/storage/bolt"
+	"github.com/beckerin/pixie-block/config"
+	"github.com/beckerin/pixie-block/internal/crypto"
+	"github.com/beckerin/pixie-block/internal/domain"
+	"github.com/beckerin/pixie-block/internal/ledger"
+	"github.com/beckerin/pixie-block/internal/node"
+	"github.com/beckerin/pixie-block/internal/storage/bolt"
 )
 
 type Blockchain struct {

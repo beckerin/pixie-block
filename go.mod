@@ -1,4 +1,4 @@
-module github.com/solidk-tech/pixie-block
+module github.com/beckerin/pixie-block
 
 go 1.26.2
 

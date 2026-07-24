@@ -4,10 +4,10 @@ import (
 	"crypto/ed25519"
 	"fmt"
 
-	"github.com/solidk-tech/pixie-block/config"
-	"github.com/solidk-tech/pixie-block/internal/crypto"
-	"github.com/solidk-tech/pixie-block/internal/domain"
-	"github.com/solidk-tech/pixie-block/internal/ledger"
+	"github.com/beckerin/pixie-block/config"
+	"github.com/beckerin/pixie-block/internal/crypto"
+	"github.com/beckerin/pixie-block/internal/domain"
+	"github.com/beckerin/pixie-block/internal/ledger"
 )
 
 func BuildInitialState(genesis config.Genesis, keystore config.Keystore, taxes config.Taxes) (*ledger.State, error) {
