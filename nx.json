@@ -3,5 +3,6 @@
   "analytics": true,
   "plugins": [
     "@nx-go/nx-go"
-  ]
+  ],
+  "nxCloudId": "6a6353b777e7da220ab851ed"
 }
