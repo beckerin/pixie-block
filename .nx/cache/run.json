@@ -1,20 +1,20 @@
 {
   "run": {
-    "command": "nx run pixie-block:clean",
-    "startTime": "2026-07-24T12:38:34.950Z",
-    "endTime": "2026-07-24T12:38:35.022Z",
+    "command": "nx build pixie-block",
+    "startTime": "2026-07-24T12:41:16.480Z",
+    "endTime": "2026-07-24T12:41:16.533Z",
     "inner": false
   },
   "tasks": [
     {
-      "taskId": "pixie-block:clean",
-      "target": "clean",
+      "taskId": "pixie-block:build",
+      "target": "build",
       "projectName": "pixie-block",
-      "hash": "4895446725275546424",
-      "startTime": "2026-07-24T12:38:34.992Z",
-      "endTime": "2026-07-24T12:38:35.020Z",
+      "hash": "8741260573144513483",
+      "startTime": "2026-07-24T12:41:16.527Z",
+      "endTime": "2026-07-24T12:41:16.532Z",
       "params": "",
-      "cacheStatus": "cache-miss",
+      "cacheStatus": "local-cache-hit",
       "status": 0
     }
   ]
