@@ -1,8 +1,8 @@
 /// <reference types='vitest' />
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import vue from '@vitejs/plugin-vue';
+import { defineConfig } from 'vite';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -21,7 +21,7 @@ export default defineConfig(() => ({
   //   plugins: () => [ nxViteTsPaths() ],
   // },
   build: {
-    outDir: '../../dist/apps/pixie-web',
+    outDir: './dist',
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
