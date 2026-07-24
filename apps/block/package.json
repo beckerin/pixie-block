@@ -1,0 +1,14 @@
+{
+  "name": "pixie-block",
+  "private": true,
+  "scripts": {
+    "build": "go build -o bin/pixie-node ./cmd/node",
+    "test": "go test ./...",
+    "genkeys": "go run ./tools/genkeys.go",
+    "dev": "./bin/pixie-node --data-dir ./data/node1 --api-addr :8080 --p2p-listen :9000 --node-id node-1",
+    "run": "./bin/pixie-node --data-dir ./data/node1 --api-addr :8080 --p2p-listen :9000 --node-id node-1",
+    "run-node2": "./bin/pixie-node --data-dir ./data/node2 --api-addr :8081 --p2p-listen :9001 --node-id node-2 --peer 127.0.0.1:9000",
+    "run-cluster": "./bin/pixie-node --data-dir ./data/node1 --api-addr :8080 --p2p-listen :9000 --node-id node-1 & sleep 2 && ./bin/pixie-node --data-dir ./data/node2 --api-addr :8081 --p2p-listen :9001 --node-id node-2 --peer 127.0.0.1:9000",
+    "clean": "rm -rf bin data"
+  }
+}
