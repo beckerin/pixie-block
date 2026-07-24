@@ -1,7 +1,7 @@
 .PHONY: build test genkeys run run-node2 run-cluster clean
 
 build:
-	go build -o bin/pixie-node ./cmd/node
+	go build -o main ./cmd/node
 
 test:
 	go test ./...
@@ -10,14 +10,14 @@ genkeys:
 	go run ./tools/genkeys.go
 
 run: build
-	./bin/pixie-node \
+	./main \
 		--data-dir ./data/node1 \
 		--api-addr :8080 \
 		--p2p-listen :9000 \
 		--node-id node-1
 
 run-node2: build
-	./bin/pixie-node \
+	./main \
 		--data-dir ./data/node2 \
 		--api-addr :8081 \
 		--p2p-listen :9001 \
