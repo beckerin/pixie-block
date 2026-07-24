@@ -34,7 +34,7 @@
   "nxCloudId": "6a6353b777e7da220ab851ed",
   "namedInputs": {
     "sharedGlobals": [
-      "{workspaceRoot}/.github/workflows/ci---flow.yml"
+      "{workspaceRoot}/.github/workflows/ci-flow.yml"
     ],
     "default": [
       "sharedGlobals"
