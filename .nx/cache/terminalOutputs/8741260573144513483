@@ -1,3 +1,0 @@
-> nx run pixie-block:build
-
-Executing command: go build -o bin/pixie-node ./cmd/node
