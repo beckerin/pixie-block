@@ -49,7 +49,7 @@ defineProps<{
       <div id="middle-content">
       <div id="middle-left-content">
         <div id="learning-materials" class="rounded shadow">
-          <h2>Learning materials</h2>
+          <h2>Not Learning materials</h2>
           <a
             href="https://nx.dev/getting-started/intro?utm_source=nx-project"
             target="_blank"
