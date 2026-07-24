@@ -1,7 +1,7 @@
 .PHONY: build test genkeys run run-node2 run-cluster clean
 
 build:
-	go build -o main ./cmd/node
+	go build -o main ./cmd/server
 
 test:
 	go test ./...
