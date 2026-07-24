@@ -1,2 +1,0 @@
-- run: nx affected -t lint test build
-- run: nx build pixie-block

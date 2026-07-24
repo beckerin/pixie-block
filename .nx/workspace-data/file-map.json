@@ -11,116 +11,112 @@
   "fileMap": {
     "nonProjectFiles": [
       {
-        "file": ".agents/skills/nx-import/SKILL.md",
-        "hash": "9709061508228126022"
-      },
-      {
-        "file": ".agents/skills/nx-workspace/references/AFFECTED.md",
-        "hash": "10577828056523124002"
-      },
-      {
-        "file": ".github/workflows/ci---flow.yml",
-        "hash": "16594622260847420450"
-      },
-      {
-        "file": ".agents/skills/nx-plugins/SKILL.md",
-        "hash": "4717624081372438208"
-      },
-      {
-        "file": ".gitignore",
-        "hash": "16822104465441212530"
-      },
-      {
-        "file": "package-lock.json",
-        "hash": "3279066642622447520"
-      },
-      {
-        "file": ".agents/skills/nx-run-tasks/SKILL.md",
-        "hash": "10723914446406921246"
-      },
-      {
-        "file": ".agents/skills/monitor-ci/scripts/ci-state-update.mjs",
-        "hash": "7215142467513984630"
-      },
-      {
-        "file": ".agents/skills/nx-import/references/ESLINT.md",
-        "hash": "3100736771536685484"
-      },
-      {
-        "file": ".agents/skills/link-workspace-packages/SKILL.md",
-        "hash": "6638592300654417978"
+        "file": ".agents/skills/nx-import/references/TURBOREPO.md",
+        "hash": "6654032474246573297"
       },
       {
         "file": "go.work.sum",
         "hash": "13107867570235583461"
       },
       {
-        "file": "nx.json",
-        "hash": "12380744274832605061"
+        "file": ".agents/skills/monitor-ci/references/fix-flows.md",
+        "hash": "14499115380699629375"
       },
       {
-        "file": ".agents/skills/monitor-ci/SKILL.md",
-        "hash": "18088016943973848606"
-      },
-      {
-        "file": ".DS_Store",
-        "hash": "14084404632488199927"
-      },
-      {
-        "file": ".agents/skills/monitor-ci/scripts/ci-poll-decide.mjs",
-        "hash": "13193289048342915957"
-      },
-      {
-        "file": ".cursor/agents/ci-monitor-subagent.md",
-        "hash": "14869577228457002810"
-      },
-      {
-        "file": ".agents/skills/nx-import/references/NEXT.md",
-        "hash": "8705422121624482541"
-      },
-      {
-        "file": ".agents/skills/nx-workspace/SKILL.md",
-        "hash": "56694506768298655"
-      },
-      {
-        "file": ".agents/skills/nx-import/references/GRADLE.md",
-        "hash": "15868511153961490698"
-      },
-      {
-        "file": ".agents/skills/nx-import/references/TURBOREPO.md",
-        "hash": "6654032474246573297"
-      },
-      {
-        "file": ".github/workflows/ci.yml",
-        "hash": "11514713521970800975"
-      },
-      {
-        "file": "AGENTS.md",
-        "hash": "3693179293707062853"
+        "file": ".agents/skills/nx-plugins/SKILL.md",
+        "hash": "4717624081372438208"
       },
       {
         "file": "package.json",
         "hash": "16551958128099586155"
       },
       {
-        "file": "go.work",
-        "hash": "12984691112017789301"
+        "file": ".agents/skills/nx-generate/SKILL.md",
+        "hash": "12149253535688076771"
+      },
+      {
+        "file": "package-lock.json",
+        "hash": "3279066642622447520"
       },
       {
         "file": ".agents/skills/nx-import/references/JEST.md",
         "hash": "8022966628634571060"
       },
       {
-        "file": ".agents/skills/monitor-ci/references/fix-flows.md",
-        "hash": "14499115380699629375"
+        "file": ".agents/skills/nx-workspace/SKILL.md",
+        "hash": "56694506768298655"
+      },
+      {
+        "file": ".agents/skills/monitor-ci/scripts/ci-state-update.mjs",
+        "hash": "7215142467513984630"
+      },
+      {
+        "file": ".agents/skills/monitor-ci/scripts/ci-poll-decide.mjs",
+        "hash": "13193289048342915957"
+      },
+      {
+        "file": ".agents/skills/nx-import/SKILL.md",
+        "hash": "9709061508228126022"
+      },
+      {
+        "file": ".agents/skills/link-workspace-packages/SKILL.md",
+        "hash": "6638592300654417978"
+      },
+      {
+        "file": ".agents/skills/nx-workspace/references/AFFECTED.md",
+        "hash": "10577828056523124002"
+      },
+      {
+        "file": ".github/workflows/ci-flow.yml",
+        "hash": "16594622260847420450"
+      },
+      {
+        "file": ".agents/skills/monitor-ci/SKILL.md",
+        "hash": "18088016943973848606"
+      },
+      {
+        "file": ".gitignore",
+        "hash": "16822104465441212530"
+      },
+      {
+        "file": ".cursor/agents/ci-monitor-subagent.md",
+        "hash": "14869577228457002810"
+      },
+      {
+        "file": "nx.json",
+        "hash": "12380744274832605061"
+      },
+      {
+        "file": "AGENTS.md",
+        "hash": "3693179293707062853"
+      },
+      {
+        "file": ".agents/skills/nx-import/references/NEXT.md",
+        "hash": "8705422121624482541"
+      },
+      {
+        "file": ".agents/skills/nx-import/references/GRADLE.md",
+        "hash": "15868511153961490698"
       },
       {
         "file": ".agents/skills/nx-import/references/VITE.md",
         "hash": "5793928500507593678"
       },
       {
-        "file": ".agents/skills/nx-generate/SKILL.md",
-        "hash": "12149253535688076771"
+        "file": "go.work",
+        "hash": "12984691112017789301"
+      },
+      {
+        "file": ".DS_Store",
+        "hash": "14084404632488199927"
+      },
+      {
+        "file": ".agents/skills/nx-run-tasks/SKILL.md",
+        "hash": "10723914446406921246"
+      },
+      {
+        "file": ".agents/skills/nx-import/references/ESLINT.md",
+        "hash": "3100736771536685484"
       }
     ],
     "projectFileMap": {
