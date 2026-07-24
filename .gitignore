@@ -1,4 +1,6 @@
-bin/
-data/
-config/validator-key.json
-config/keystore.json
+
+.nx/polygraph
+.claude/worktrees
+.claude/settings.local.json
+
+node_modules

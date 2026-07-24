@@ -1,0 +1,332 @@
+{
+  "pixie-block": {
+    "root": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "name": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "projectType": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.executor": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.cache": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.inputs.0": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.inputs.1": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.inputs.2": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.inputs.3": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.inputs.4": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.inputs.5": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.inputs.6": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.inputs": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.metadata": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.metadata.technologies": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.metadata.technologies.0": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.metadata.description": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.metadata.help": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.metadata.help.command": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.test.metadata.help.example": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.executor": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.cache": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.inputs.0": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.inputs.1": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.inputs.2": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.inputs.3": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.inputs.4": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.inputs.5": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.inputs.6": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.inputs": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.metadata": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.metadata.technologies": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.metadata.technologies.0": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.metadata.description": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.metadata.help": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.metadata.help.command": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.lint.metadata.help.example": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.executor": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.cache": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.inputs.0": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.inputs.1": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.inputs.2": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.inputs.3": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.inputs.4": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.inputs.5": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.inputs.6": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.inputs": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.outputs.0": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.outputs.1": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.outputs": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.metadata": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.metadata.technologies": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.metadata.technologies.0": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.metadata.description": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.metadata.help": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.metadata.help.command": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.tidy.metadata.help.example": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.executor": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.cache": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.inputs.0": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.inputs.1": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.inputs.2": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.inputs.3": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.inputs.4": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.inputs.5": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.inputs.6": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.inputs": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.metadata": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.metadata.technologies": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.metadata.technologies.0": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.metadata.description": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.metadata.help": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.metadata.help.command": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "targets.generate.metadata.help.example": [
+      "pixie-block/go.mod",
+      "@nx-go/nx-go"
+    ],
+    "$schema": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "sourceRoot": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ]
+  }
+}
