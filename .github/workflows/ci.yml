@@ -1,2 +1,5 @@
-- run: nx affected -t lint test build
-- run: nx build pixie-block
+- name: 
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
+- run: npx nx affected -t lint test build
