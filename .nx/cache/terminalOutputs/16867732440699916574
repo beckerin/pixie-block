@@ -1,0 +1,16 @@
+> nx run pixie-block:test
+
+Executing command: go test ./...
+?   	github.com/beckerin/pixie-block/cmd/node	[no test files]
+ok  	github.com/beckerin/pixie-block/config	(cached)
+?   	github.com/beckerin/pixie-block/internal/api	[no test files]
+?   	github.com/beckerin/pixie-block/internal/chain	[no test files]
+?   	github.com/beckerin/pixie-block/internal/consensus/poa	[no test files]
+?   	github.com/beckerin/pixie-block/internal/crypto	[no test files]
+?   	github.com/beckerin/pixie-block/internal/domain	[no test files]
+ok  	github.com/beckerin/pixie-block/internal/ledger	(cached)
+?   	github.com/beckerin/pixie-block/internal/mempool	[no test files]
+?   	github.com/beckerin/pixie-block/internal/node	[no test files]
+?   	github.com/beckerin/pixie-block/internal/p2p	[no test files]
+?   	github.com/beckerin/pixie-block/internal/storage/bolt	[no test files]
+?   	github.com/beckerin/pixie-block/tools	[no test files]

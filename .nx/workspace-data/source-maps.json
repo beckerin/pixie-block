@@ -323,10 +323,6 @@
     "sourceRoot": [
       "pixie-block/project.json",
       "nx/core/project-json"
-    ],
-    "tags": [
-      "pixie-block/project.json",
-      "nx/core/project-json"
     ]
   }
 }

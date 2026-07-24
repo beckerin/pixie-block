@@ -1,0 +1,21 @@
+{
+  "run": {
+    "command": "nx test pixie-block",
+    "startTime": "2026-07-24T12:17:21.073Z",
+    "endTime": "2026-07-24T12:17:22.381Z",
+    "inner": false
+  },
+  "tasks": [
+    {
+      "taskId": "pixie-block:test",
+      "target": "test",
+      "projectName": "pixie-block",
+      "hash": "9738942651125880000",
+      "startTime": "2026-07-24T12:17:21.684Z",
+      "endTime": "2026-07-24T12:17:22.379Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    }
+  ]
+}

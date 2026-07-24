@@ -129,8 +129,8 @@
         },
         "$schema": "../node_modules/nx/schemas/project-schema.json",
         "sourceRoot": "pixie-block",
-        "tags": [],
-        "implicitDependencies": []
+        "implicitDependencies": [],
+        "tags": []
       }
     }
   },
@@ -2667,5 +2667,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1784894324590
+  "computedAt": 1784895435200
 }
