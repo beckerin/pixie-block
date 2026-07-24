@@ -1,0 +1,16 @@
+> ./bin/pixie-node --data-dir ./data/node1 --api-addr :8080 --p2p-listen :9000 --node-id node-1
+
+2026/07/24 13:38:06 Starting Pixie Node
+2026/07/24 13:38:06 Genesis file loaded successfully
+2026/07/24 13:38:06 Keystore file loaded successfully
+2026/07/24 13:38:06 Taxes file loaded successfully
+2026/07/24 13:38:06 Validator key file loaded successfully
+2026/07/24 13:38:06 Opening store: ./data/node1
+2026/07/24 13:38:06 Store opened successfully
+2026/07/24 13:38:06 Store opened successfully
+2026/07/24 13:38:06 Initial state built successfully
+2026/07/24 13:38:06 Chain initialized successfully with height 0
+2026/07/24 13:38:06 Producer initialized successfully
+2026/07/24 13:38:06 P2P started successfully
+2026/07/24 13:38:06 Starting block production successfully
+2026/07/24 13:38:06 API listening on :8080

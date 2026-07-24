@@ -15,8 +15,6 @@
               "{projectRoot}/go.mod",
               "{projectRoot}/go.sum",
               "{projectRoot}/**/*.go",
-              "{workspaceRoot}/go.mod",
-              "{workspaceRoot}/go.sum",
               "{workspaceRoot}/go.work",
               "{workspaceRoot}/go.work.sum"
             ],
@@ -124,6 +122,83 @@
             },
             "configurations": {},
             "options": {},
+            "parallelism": true
+          },
+          "build": {
+            "executor": "@nx-go/nx-go:build",
+            "cache": true,
+            "inputs": [
+              "{projectRoot}/go.mod",
+              "{projectRoot}/go.sum",
+              "{projectRoot}/**/*.go",
+              "{workspaceRoot}/go.work",
+              "{workspaceRoot}/go.work.sum"
+            ],
+            "outputs": [
+              "{projectRoot}/bin"
+            ],
+            "options": {
+              "main": "./cmd/node",
+              "outputPath": "bin/pixie-node"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "genkeys": {
+            "executor": "nx:run-commands",
+            "options": {
+              "cwd": "pixie-block",
+              "command": "go run ./tools/genkeys.go"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "run": {
+            "executor": "nx:run-commands",
+            "dependsOn": [
+              "build"
+            ],
+            "continuous": true,
+            "options": {
+              "cwd": "pixie-block",
+              "command": "./bin/pixie-node --data-dir ./data/node1 --api-addr :8080 --p2p-listen :9000 --node-id node-1"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "run-node2": {
+            "executor": "nx:run-commands",
+            "dependsOn": [
+              "build"
+            ],
+            "continuous": true,
+            "options": {
+              "cwd": "pixie-block",
+              "command": "./bin/pixie-node --data-dir ./data/node2 --api-addr :8081 --p2p-listen :9001 --node-id node-2 --peer 127.0.0.1:9000"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "run-cluster": {
+            "executor": "nx:run-commands",
+            "dependsOn": [
+              "build"
+            ],
+            "continuous": true,
+            "options": {
+              "cwd": "pixie-block",
+              "command": "./bin/pixie-node --data-dir ./data/node1 --api-addr :8080 --p2p-listen :9000 --node-id node-1 & sleep 2 && ./bin/pixie-node --data-dir ./data/node2 --api-addr :8081 --p2p-listen :9001 --node-id node-2 --peer 127.0.0.1:9000"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "clean": {
+            "executor": "nx:run-commands",
+            "options": {
+              "cwd": "pixie-block",
+              "command": "rm -rf bin data"
+            },
+            "configurations": {},
             "parallelism": true
           }
         },
@@ -2667,5 +2742,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1784895435200
+  "computedAt": 1784896751710
 }

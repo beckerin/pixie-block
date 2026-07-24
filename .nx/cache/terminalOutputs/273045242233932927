@@ -1,0 +1,30 @@
+> ./bin/pixie-node --data-dir ./data/node1 --api-addr :8080 --p2p-listen :9000 --node-id node-1 & sleep 2 && ./bin/pixie-node --data-dir ./data/node2 --api-addr :8081 --p2p-listen :9001 --node-id node-2 --peer 127.0.0.1:9000
+
+2026/07/24 13:38:24 Starting Pixie Node
+2026/07/24 13:38:24 Genesis file loaded successfully
+2026/07/24 13:38:24 Keystore file loaded successfully
+2026/07/24 13:38:24 Taxes file loaded successfully
+2026/07/24 13:38:24 Validator key file loaded successfully
+2026/07/24 13:38:24 Opening store: ./data/node1
+2026/07/24 13:38:24 Store opened successfully
+2026/07/24 13:38:24 Store opened successfully
+2026/07/24 13:38:24 Initial state built successfully
+2026/07/24 13:38:24 Chain initialized successfully with height 0
+2026/07/24 13:38:24 Producer initialized successfully
+2026/07/24 13:38:24 P2P started successfully
+2026/07/24 13:38:24 Starting block production successfully
+2026/07/24 13:38:24 API listening on :8080
+2026/07/24 13:38:26 Starting Pixie Node
+2026/07/24 13:38:26 Genesis file loaded successfully
+2026/07/24 13:38:26 Keystore file loaded successfully
+2026/07/24 13:38:26 Taxes file loaded successfully
+2026/07/24 13:38:26 Validator key file loaded successfully
+2026/07/24 13:38:26 Opening store: ./data/node2
+2026/07/24 13:38:26 Store opened successfully
+2026/07/24 13:38:26 Store opened successfully
+2026/07/24 13:38:26 Initial state built successfully
+2026/07/24 13:38:26 Chain initialized successfully with height 0
+2026/07/24 13:38:26 Producer initialized successfully
+2026/07/24 13:38:26 P2P started successfully
+2026/07/24 13:38:26 Starting block production successfully
+2026/07/24 13:38:26 API listening on :8081

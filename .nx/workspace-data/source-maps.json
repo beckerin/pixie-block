@@ -323,6 +323,198 @@
     "sourceRoot": [
       "pixie-block/project.json",
       "nx/core/project-json"
+    ],
+    "targets.build": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.executor": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.cache": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.inputs.0": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.inputs.1": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.inputs.2": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.inputs.3": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.inputs.4": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.inputs": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.outputs.0": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.outputs": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.main": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.outputPath": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.genkeys": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.genkeys.executor": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.genkeys.options.cwd": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.genkeys.options.command": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.genkeys.options": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run.executor": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run.dependsOn.0": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run.dependsOn": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run.continuous": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run.options.cwd": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run.options.command": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run.options": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-node2": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-node2.executor": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-node2.dependsOn.0": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-node2.dependsOn": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-node2.continuous": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-node2.options.cwd": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-node2.options.command": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-node2.options": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-cluster": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-cluster.executor": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-cluster.dependsOn.0": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-cluster.dependsOn": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-cluster.continuous": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-cluster.options.cwd": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-cluster.options.command": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run-cluster.options": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.clean": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.clean.executor": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.clean.options.cwd": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.clean.options.command": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.clean.options": [
+      "pixie-block/project.json",
+      "nx/core/project-json"
     ]
   }
 }
