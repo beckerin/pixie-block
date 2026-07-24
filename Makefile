@@ -9,6 +9,13 @@ test:
 genkeys:
 	go run ./tools/genkeys.go
 
+prepare: build
+	./main \
+		--data-dir ./data/main \
+		--api-addr :80 \
+		--p2p-listen :9000 \
+		--node-id main
+
 run: build
 	./main \
 		--data-dir ./data/node1 \

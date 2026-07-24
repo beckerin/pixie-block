@@ -1,5 +1,6 @@
 bin/
 data/
+config/genesis.json
 config/validator-key.json
 config/keystore.json
 main
