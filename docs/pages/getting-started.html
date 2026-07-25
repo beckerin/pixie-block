@@ -1,0 +1,71 @@
+<h1>Getting started</h1>
+<p class="lead">Suba um nó local, abra o explorer e explore a API documentada.</p>
+
+<div class="callout">
+  Documentação completa em <code>/v1/docs/</code>. Explorer HTMX em <a href="/">/</a>.
+  Referência interativa em <a href="#/reference">API Reference</a>.
+</div>
+
+<h2>Pré-requisitos</h2>
+<ul>
+  <li>Go 1.22+</li>
+  <li>Make</li>
+</ul>
+
+<h2>Setup</h2>
+<pre><code># Gerar genesis, keystore e validator-key de demonstração
+make genkeys
+
+# Compilar
+make build
+
+# Testes
+make test</code></pre>
+
+<h2>Rodar um nó</h2>
+<pre><code>make run</code></pre>
+<p>Com o Makefile padrão:</p>
+<ul>
+  <li>API HTTP: <code>http://localhost:80</code></li>
+  <li>P2P: <code>:90</code></li>
+  <li>Explorer: <a href="/">http://localhost/</a></li>
+  <li>Docs: <a href="/v1/docs/">http://localhost/v1/docs/</a></li>
+</ul>
+
+<div class="callout warn">
+  O default do binário (<code>--api-addr</code>) é <code>:8080</code>. O alvo <code>make run</code> sobrescreve para <code>:80</code>.
+</div>
+
+<h2>Primeira transação</h2>
+<p>Valores em <strong>centavos</strong>. Impostos vêm de <code>config/taxes.json</code> via <code>tax_codes</code> no item (não envie splits no body).</p>
+<pre><code>curl -s -X POST http://localhost/v1/transactions \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "payer": "merchant_001",
+    "payee": "person_001",
+    "items": [
+      {
+        "description": "Pagamento",
+        "amount": 1000,
+        "tax_codes": []
+      }
+    ]
+  }'</code></pre>
+<p>Após o <em>block time</em> (~5s no genesis), a TX entra em um bloco. Consulte:</p>
+<pre><code>curl -s http://localhost/v1/blocks/latest | jq .
+curl -s http://localhost/v1/accounts/person_001/balance | jq .</code></pre>
+
+<h2>Cluster local (2 nós)</h2>
+<pre><code>make run-cluster</code></pre>
+<ul>
+  <li>Nó 1 (produtor): API <code>:80</code>, P2P <code>:90</code></li>
+  <li>Nó 2 (follower): API <code>:81</code>, P2P <code>:91</code> → peer <code>127.0.0.1:90</code></li>
+</ul>
+
+<h2>Próximos passos</h2>
+<ul>
+  <li><a href="#/architecture">Arquitetura</a></li>
+  <li><a href="#/accounts">Contas</a> e <a href="#/transactions">Transações</a></li>
+  <li><a href="#/privacy">Privacidade / viewer</a></li>
+  <li><a href="#/reference">API Reference</a></li>
+</ul>

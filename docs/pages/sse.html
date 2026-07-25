@@ -1,0 +1,46 @@
+<h1>SSE / chain</h1>
+<p class="lead"><code>GET /v1/chain</code> é um stream Server-Sent Events para o explorer — não um JSON único.</p>
+
+<div class="endpoint"><span class="badge get">GET</span> <code>/v1/chain</code> <span style="color:#64748b">text/event-stream</span></div>
+
+<h2>Comportamento</h2>
+<ul>
+  <li>Upgrade SSE; push inicial imediatamente.</li>
+  <li>Polling interno ~1s; reenvia só se o <strong>height</strong> mudou.</li>
+  <li>Viewer opcional via <code>?pkey=</code> (preferível) ou <code>X-Private-Key</code>.</li>
+</ul>
+
+<h2>Eventos</h2>
+<table>
+  <thead>
+    <tr><th>Event</th><th>Conteúdo</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ChainInfo</code></td><td>HTML: chain id + height</td></tr>
+    <tr><td><code>LatestBlock</code></td><td>JSON do bloco atual (redigido por viewer)</td></tr>
+    <tr><td><code>PreviousBlock</code></td><td>JSON do height−1 ou texto “nenhum bloco anterior”</td></tr>
+    <tr><td><code>ViewerPanel</code></td><td>HTML do painel de ações (vazio / conta / audit)</td></tr>
+    <tr><td><code>Balance</code></td><td>HTML do saldo próprio ou lista audit; vazio se anônimo</td></tr>
+  </tbody>
+</table>
+
+<h2>ViewerPanel e Balance</h2>
+<table>
+  <thead>
+    <tr><th>Viewer</th><th>Painel</th><th>Saldo</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Anônimo</td><td>Placeholder vazio</td><td>Vazio</td></tr>
+    <tr><td>Conta</td><td>TX + close se merchant</td><td>Saldo da conta</td></tr>
+    <tr><td>Audit</td><td>Criar, TX, close person/merchant</td><td>Todas as contas</td></tr>
+  </tbody>
+</table>
+
+<h2>Inspecionar com curl</h2>
+<pre><code>curl -N 'http://localhost/v1/chain'
+curl -N 'http://localhost/v1/chain?pkey=&lt;pkey&gt;'</code></pre>
+
+<div class="callout">
+  O explorer usa <code>htmx-ext-sse</code> com <code>sse-swap</code> nos elementos
+  <code>ChainInfo</code>, <code>LatestBlock</code>, <code>PreviousBlock</code>, <code>ViewerPanel</code>, <code>Balance</code>.
+</div>

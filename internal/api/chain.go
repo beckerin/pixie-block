@@ -70,7 +70,12 @@ func (s *Server) handleChain(w http.ResponseWriter, r *http.Request) {
 		if err := send("ViewerPanel", id, s.viewerPanelHTML(viewer)); err != nil {
 			return err
 		}
-		return send("Balance", id, s.balanceHTML(viewer))
+
+		if err := send("Balance", id, s.balanceHTML(viewer)); err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	var (

@@ -1,0 +1,48 @@
+<h1>Consenso PoA</h1>
+<p class="lead">Proof of Authority simples: validadores listados no genesis; um produtor assina blocos.</p>
+
+<h2>Genesis</h2>
+<ul>
+  <li><code>validators[]</code> com <code>id</code> + <code>public_key</code></li>
+  <li><code>block_time_seconds</code> (demo: 5)</li>
+  <li><code>max_txs_per_block</code></li>
+  <li><code>chain_id</code></li>
+</ul>
+
+<h2>Producer vs follower</h2>
+<table>
+  <thead>
+    <tr><th>Modo</th><th>Como</th><th>Capacidades</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Producer</td>
+      <td><code>--validator-key</code> aponta para a chave do validador</td>
+      <td>Produz blocos; cria contas; close de person; audit via pkey do validator</td>
+    </tr>
+    <tr>
+      <td>Follower</td>
+      <td><code>--validator-key ""</code> (como <code>make run-node2</code>)</td>
+      <td>Recebe blocos/TXs via P2P; API de leitura; create account → 403</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Ciclo de bloco</h2>
+<ol>
+  <li>Espera <code>block_time_seconds</code>.</li>
+  <li>Drena mempools (creates, payments, closes) até o limite.</li>
+  <li>Monta bloco com previous hash, assina Ed25519.</li>
+  <li>Persiste, aplica estado, gossip.</li>
+</ol>
+
+<div class="callout warn">
+  PoA MVP: sem BFT formal, sem rotação elaborada de líder. Adequado a demos e ambientes controlados.
+</div>
+
+<h2>P2P</h2>
+<ul>
+  <li>TCP + mensagens JSON</li>
+  <li>Peers via <code>--peer</code> (lista separada por vírgula)</li>
+  <li>Sem NAT traversal automático</li>
+</ul>

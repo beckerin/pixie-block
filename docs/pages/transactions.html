@@ -1,0 +1,71 @@
+<h1>Transações</h1>
+<p class="lead">Payments com line items; impostos resolvidos pelos <code>tax_codes</code> definidos em <code>config/taxes.json</code>.</p>
+
+<div class="endpoint"><span class="badge post">POST</span> <code>/v1/transactions</code></div>
+
+<h2>Body</h2>
+<pre><code>{
+  "payer": "merchant_001",
+  "payee": "person_001",
+  "items": [
+    {
+      "description": "Serviço",
+      "amount": 100000,
+      "tax_codes": ["IBS", "CBS"],
+      "discounts": []
+    }
+  ]
+}</code></pre>
+
+<table>
+  <thead>
+    <tr><th>Campo</th><th>Descrição</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>payer</code> / <code>payee</code></td><td>IDs de contas existentes</td></tr>
+    <tr><td><code>items[].amount</code></td><td>Centavos (inteiro)</td></tr>
+    <tr><td><code>items[].tax_codes</code></td><td>Códigos presentes em <code>taxes.json</code> (rate_bps + tax_account)</td></tr>
+    <tr><td><code>items[].discounts</code></td><td>Opcional; valor absoluto para conta fiscal</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  Não envie <code>tax_splits</code> no body: o nó aplica as taxas a partir do genesis/taxes.
+  Payee <code>person</code> não pode ter <code>tax_codes</code> nos items.
+</div>
+
+<h2>Assinatura</h2>
+<p>O nó assina a TX com a chave privada do <strong>payer</strong> no keystore local. Se o payer não estiver no keystore deste nó → erro.</p>
+
+<h2>Admissão</h2>
+<ol>
+  <li>Validação de contas, impostos e saldo (com reserva no mempool).</li>
+  <li><code>201</code> com a TX assinada.</li>
+  <li>Gossip P2P; inclusão no próximo bloco do produtor.</li>
+</ol>
+
+<h2>Consulta</h2>
+<div class="endpoint"><span class="badge get">GET</span> <code>/v1/transactions/{id}</code></div>
+<p>Busca no chain ou mempool. Com viewer (<code>pkey</code>), payload completo se for parte ou audit; caso contrário, visão pública redigida.</p>
+
+<h2>Blocos</h2>
+<div class="endpoint"><span class="badge get">GET</span> <code>/v1/blocks/latest</code></div>
+<div class="endpoint"><span class="badge get">GET</span> <code>/v1/blocks/previous</code></div>
+<div class="endpoint"><span class="badge get">GET</span> <code>/v1/blocks/{height}</code></div>
+<p>Também sujeitos à redação por viewer. Ver <a href="#/privacy">Privacidade</a>.</p>
+
+<h2>Exemplo com impostos (genesis demo)</h2>
+<p>Em <code>config/taxes.json</code>: IBS 17% → <code>federal_treasury</code>, CBS 11% → <code>sao_paulo_treasury</code> (rate_bps).</p>
+<pre><code>curl -s -X POST http://localhost/v1/transactions \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "payer": "merchant_001",
+    "payee": "merchant_002",
+    "items": [
+      {
+        "description": "NF",
+        "amount": 100000,
+        "tax_codes": ["IBS", "CBS"]
+      }
+    ]
+  }' | jq .</code></pre>

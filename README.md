@@ -1,6 +1,8 @@
 # Pixie Block
 
-Blockchain customizada em Go para transações financeiras com repasse automático de impostos e descontos para uma conta central de impostos (`tax_treasury`), com o saldo líquido creditado na conta do recebedor.
+Blockchain customizada em Go para transações financeiras com repasse automático de impostos (via `tax_codes` + `config/taxes.json`), ledger PoA e explorer HTMX.
+
+**Documentação completa:** com o nó no ar, abra [`/v1/docs/`](http://localhost/v1/docs/) (visual estilo API Platform + OpenAPI/Scalar).
 
 ## Arquitetura
 
@@ -15,25 +17,28 @@ flowchart LR
     P2P --> Chain
 ```
 
-- **Consenso**: Proof of Authority (PoA) com validadores definidos no genesis
+- **Consenso**: Proof of Authority (PoA) com validadores no genesis
 - **Persistência**: bbolt (`pixie.db` por nó)
 - **P2P**: TCP + JSON gossip para transações e blocos
-- **Assinaturas**: Ed25519 para transações (payer) e blocos (validador)
+- **Assinaturas**: Ed25519 (payer / validador)
+- **Privacidade de leitura**: viewer via `pkey` / `X-Private-Key` (anônimo, conta ou audit)
 
 ## Estrutura
 
 ```
-cmd/node/          # Binário do nó
-config/            # genesis.json, keystore.json, validator-key.json
+cmd/server/        # Binário do nó
+config/            # genesis, keystore, validator-key, taxes
+docs/              # Site de docs (servido em /v1/docs/)
+dist/              # Explorer HTMX
 internal/
   domain/          # Block, Transaction, Account
   ledger/          # Validação e aplicação de splits fiscais
   chain/           # Encadeamento e índice de transações
-  mempool/         # Pool de transações pendentes
+  mempool/         # Pools (payments, creates, closes)
   consensus/poa/   # Produção de blocos PoA
   storage/bolt/    # Persistência
   p2p/             # Gossip e sync
-  api/             # REST HTTP
+  api/             # REST HTTP + SSE
 tools/genkeys.go   # Gera chaves de demonstração
 ```
 
@@ -44,13 +49,8 @@ tools/genkeys.go   # Gera chaves de demonstração
 ## Setup
 
 ```bash
-# Gerar chaves e arquivos de configuração de demonstração
 make genkeys
-
-# Compilar
 make build
-
-# Rodar testes
 make test
 ```
 
@@ -60,7 +60,15 @@ make test
 make run
 ```
 
-O nó expõe a API em `http://localhost:8080` e P2P em `:9000`.
+Com o Makefile:
+
+| Serviço | Endereço |
+|---------|----------|
+| API / Explorer | `http://localhost:80` |
+| Docs | `http://localhost/v1/docs/` |
+| P2P | `:90` |
+
+O default do binário é `--api-addr :8080`; `make run` usa `:80`.
 
 ## Rodar cluster local (2 nós)
 
@@ -68,86 +76,72 @@ O nó expõe a API em `http://localhost:8080` e P2P em `:9000`.
 make run-cluster
 ```
 
-- Nó 1: API `:8080`, P2P `:9000`
-- Nó 2: API `:8081`, P2P `:9001` (conecta ao nó 1)
+- Nó 1 (produtor): API `:80`, P2P `:90`
+- Nó 2 (follower): API `:81`, P2P `:91` → peer `127.0.0.1:90`
 
-## Contas de demonstração (genesis)
+## Contas de demonstração
 
-| Conta | Saldo inicial | Papel |
-|-------|---------------|-------|
-| `tax_treasury` | R$ 0,00 | Conta central de impostos |
-| `merchant_001` | R$ 10.000,00 | Pagador (possui chave no keystore) |
-| `supplier_042` | R$ 0,00 | Recebedor |
+Geradas por `make genkeys` a partir de `tools/accounts.json` (ex.: `person_*`, `merchant_*`, treasuries). Chaves em `config/keystore.json` e `config/validator-key.json`.
 
 ## Exemplo: submeter transação
 
+Valores em **centavos**. Impostos vêm de `config/taxes.json` pelos `tax_codes` do item (não envie `tax_splits` no body). Payee `person` não pode ter `tax_codes`.
+
 ```bash
-curl -s -X POST http://localhost:8080/v1/transactions \
+curl -s -X POST http://localhost/v1/transactions \
   -H 'Content-Type: application/json' \
   -d '{
     "payer": "merchant_001",
-    "payee": "supplier_042",
+    "payee": "person_001",
     "items": [
-      { "description": "Serviço de consultoria", "amount": 100000 }
-    ],
-    "tax_splits": [
-      { "tax_code": "ISS", "rate_bps": 500, "amount": 5000, "tax_account": "tax_treasury" }
-    ],
-    "discounts": [
-      { "code": "PIS_CREDIT", "amount": 1650, "tax_account": "tax_treasury" }
+      { "description": "Pagamento", "amount": 1000, "tax_codes": [] }
     ]
   }' | jq .
 ```
 
-Valores em **centavos**:
-- Bruto: R$ 1.000,00 (`100000`)
-- ISS: R$ 50,00 (`5000`) → `tax_treasury`
-- Desconto PIS: R$ 16,50 (`1650`) → `tax_treasury`
-- Líquido ao recebedor: R$ 933,50 (`93350`)
-
-Após ~5 segundos (block time), o validador inclui a transação em um bloco.
+Após ~5 segundos (`block_time_seconds`), o validador inclui a TX em um bloco.
 
 ## Consultas
 
 ```bash
-# Último bloco
-curl -s http://localhost:8080/v1/blocks/latest | jq .
+# Último bloco (visão pública; use ?pkey= para viewer)
+curl -s http://localhost/v1/blocks/latest | jq .
 
-# Saldo do recebedor
-curl -s http://localhost:8080/v1/accounts/supplier_042/balance | jq .
+# Saldo
+curl -s http://localhost/v1/accounts/person_001/balance | jq .
 
-# Saldo da conta de impostos
-curl -s http://localhost:8080/v1/accounts/tax_treasury/balance | jq .
-
-# Metadados da chain
-curl -s http://localhost:8080/v1/chain | jq .
+# SSE da chain (não é JSON one-shot)
+curl -N http://localhost/v1/chain
 ```
 
 ## Flags do nó
 
 | Flag | Default | Descrição |
 |------|---------|-----------|
-| `--data-dir` | `./data` | Diretório de persistência |
-| `--genesis` | `config/genesis.json` | Arquivo genesis |
-| `--keystore` | `config/keystore.json` | Chaves de contas pagadoras |
-| `--validator-key` | `config/validator-key.json` | Chave do validador PoA |
-| `--api-addr` | `:8080` | Endereço da API HTTP |
-| `--p2p-listen` | `:9000` | Endereço P2P |
-| `--node-id` | `node-1` | Identificador do nó |
-| `--peer` | — | Peer(s) separados por vírgula |
+| `--data-dir` | `./data` | Persistência |
+| `--genesis` | `config/genesis.json` | Genesis |
+| `--keystore` | `config/keystore.json` | Chaves de contas |
+| `--validator-key` | `config/validator-key.json` | Produtor PoA (`""` = follower) |
+| `--taxes` | `config/taxes.json` | Tabela de impostos |
+| `--api-addr` | `:8080` | HTTP |
+| `--p2p-listen` | `:9000` | P2P |
+| `--node-id` | `node-1` | ID do nó |
+| `--peer` | — | Peers separados por vírgula |
+| `--bolt-nosync` | false | Bolt NoSync (demo) |
 
-## Regras on-chain
+## Regras on-chain (resumo)
 
-1. `sum(items) == gross_amount`
-2. `sum(tax_splits) + sum(discounts) + net_to_payee == gross_amount`
-3. Contas fiscais devem estar em `allowed_tax_accounts` do genesis
-4. Pagador deve ter saldo suficiente
-5. Transação assinada pelo pagador; bloco assinado pelo validador PoA
+1. Contas fiscais em `allowed_tax_accounts`
+2. Pagador com saldo suficiente (reserva no mempool)
+3. Payment assinada pelo payer (keystore do nó); bloco pelo validador
+4. Create account: só produtor; close person (validador) vs merchant (pkey, saldo 0)
+
+Detalhes: [docs](http://localhost/v1/docs/#/getting-started).
 
 ## Limitações do MVP
 
-- Sem smart contracts — regras fiscais validadas pelo nó
-- Sem privacidade — valores públicos na chain
+- Sem smart contracts — regras fiscais no nó
+- Privacidade parcial (viewer em blocos/TXs/SSE); listagem de contas ainda pública
 - PoA simples — sem BFT formal
-- P2P sem NAT traversal — peers configurados manualmente
-- Sem integração bancária — contas são endereços internos do ledger
+- P2P sem NAT traversal — peers manuais
+- Sem integração bancária — contas internas do ledger

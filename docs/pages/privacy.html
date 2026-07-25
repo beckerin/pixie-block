@@ -1,0 +1,56 @@
+<h1>Privacidade</h1>
+<p class="lead">Leituras da API e do SSE usam um <em>viewer</em> derivado da chave privada. Não há middleware de login global.</p>
+
+<h2>Como identificar o viewer</h2>
+<ul>
+  <li>Header <code>X-Private-Key: &lt;base64&gt;</code>, ou</li>
+  <li>Query <code>?pkey=&lt;base64&gt;</code> (necessário para EventSource / SSE, que não envia headers customizados)</li>
+</ul>
+<p><code>+</code> na chave pode virar espaço na URL; o servidor normaliza espaços de volta para <code>+</code>.</p>
+
+<h2>Níveis</h2>
+<table>
+  <thead>
+    <tr><th>Viewer</th><th>Como</th><th>O que vê</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Anônimo</td>
+      <td>Sem pkey / inválida</td>
+      <td>Blocos e TXs redigidos; painel/saldo SSE vazios</td>
+    </tr>
+    <tr>
+      <td>Conta</td>
+      <td>pkey no keystore</td>
+      <td>Payload completo quando é parte (payer/payee, owner create/close, destination); saldo próprio no SSE</td>
+    </tr>
+    <tr>
+      <td>Audit</td>
+      <td>pkey = validator</td>
+      <td>Tudo em claro; painel total + lista de saldos no SSE</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Redação (visão pública)</h2>
+<ul>
+  <li>IDs de conta → public key opaca quando aplicável</li>
+  <li>Itens, assinaturas e campos sensíveis → tokens derivados (hash)</li>
+  <li>Create/close públicos: timestamp + public_key + assinatura opaca</li>
+</ul>
+
+<h2>Explorer</h2>
+<p>O login do explorer reconecta o SSE com <code>/v1/chain?pkey=…</code>. Logout volta à conexão anônima.</p>
+
+<div class="callout warn">
+  Listagens <code>GET /v1/accounts</code> e balance por ID permanecem públicas (saldos em claro).
+  A redação aplica-se a blocos, TXs e eventos SSE de painel/saldo contextual.
+</div>
+
+<h2>Exemplos</h2>
+<pre><code># Bloco com visão de conta
+curl -s 'http://localhost/v1/blocks/latest?pkey=&lt;pkey&gt;' | jq .
+
+# Mesmo com header
+curl -s http://localhost/v1/blocks/latest \
+  -H 'X-Private-Key: &lt;pkey&gt;' | jq .</code></pre>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pixie Block Docs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/docs.css" />
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
+    window.mermaid = mermaid;
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:0.75rem">
+      <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Abrir menu">Menu</button>
+      <a class="brand" href="#/getting-started">
+        <span class="brand-mark">P</span>
+        Pixie Block
+      </a>
+    </div>
+    <nav class="topbar-links">
+      <a href="/">Explorer</a>
+      <a href="#/reference">API</a>
+      <a href="https://github.com/beckerin/pixie-block" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <nav class="nav">
+        <div class="nav-section">
+          <span class="nav-label">Começar</span>
+          <a href="#/getting-started" data-route="getting-started">Getting started</a>
+          <a href="#/architecture" data-route="architecture">Arquitetura</a>
+        </div>
+        <div class="nav-section">
+          <span class="nav-label">Conceitos</span>
+          <a href="#/accounts" data-route="accounts">Contas</a>
+          <a href="#/transactions" data-route="transactions">Transações</a>
+          <a href="#/privacy" data-route="privacy">Privacidade</a>
+          <a href="#/sse" data-route="sse">SSE / chain</a>
+          <a href="#/consensus" data-route="consensus">Consenso PoA</a>
+        </div>
+        <div class="nav-section">
+          <span class="nav-label">Operação</span>
+          <a href="#/node-ops" data-route="node-ops">Operação do nó</a>
+        </div>
+        <div class="nav-section">
+          <span class="nav-label">Referência</span>
+          <a href="#/reference" data-route="reference">API Reference</a>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="content-wrap">
+      <div id="content" class="content">
+        <p class="loading">carregando…</p>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/docs.js" defer></script>
+</body>
+</html>
