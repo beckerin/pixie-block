@@ -15,9 +15,8 @@ import (
 )
 
 type createAccountRequest struct {
-	ID       string             `json:"id"`
-	Type     domain.AccountType `json:"type"`
-	Currency string             `json:"currency"`
+	ID   string             `json:"id"`
+	Type domain.AccountType `json:"type"`
 }
 
 type createAccountResponse struct {
@@ -53,9 +52,6 @@ func (s *Server) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "id is required")
 		return
 	}
-	if req.Currency == "" {
-		req.Currency = "BRL"
-	}
 
 	pub, priv, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
@@ -67,10 +63,9 @@ func (s *Server) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
 		ID:        newTxID(),
 		Timestamp: time.Now().UTC(),
 		Account: domain.Account{
-			ID:       domain.AccountID(req.ID),
-			Type:     req.Type,
-			Balance:  0,
-			Currency: req.Currency,
+			ID:      domain.AccountID(req.ID),
+			Type:    req.Type,
+			Balance: 0,
 		},
 		PublicKey: crypto.PublicKeyBase64(pub),
 	}

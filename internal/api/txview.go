@@ -16,6 +16,7 @@ import (
 // Viewer describes who is requesting a TX/block view.
 type Viewer struct {
 	AccountID string
+	PublicKey string // derived from pkey when parseable
 	Audit     bool
 }
 
@@ -25,21 +26,27 @@ type PublicTx struct {
 	Timestamp time.Time `json:"timestamp"`
 	Payer     string    `json:"payer"`
 	Payee     string    `json:"payee"`
-	Currency  string    `json:"currency"`
 	Items     []string  `json:"items"`
+	Signature string    `json:"signature"`
+}
+
+// PublicAccountCreate is the redacted wire form of an account create.
+type PublicAccountCreate struct {
+	Timestamp time.Time `json:"timestamp"`
+	PublicKey string    `json:"public_key"`
 	Signature string    `json:"signature"`
 }
 
 // PublicBlock is a block whose transactions may be redacted per-viewer.
 type PublicBlock struct {
-	Height         int64                             `json:"height"`
-	Timestamp      time.Time                         `json:"timestamp"`
-	Transactions   []any                             `json:"transactions"`
-	AccountCreates []domain.AccountCreateTransaction `json:"account_creates,omitempty"`
-	PreviousHash   []byte                            `json:"previous_hash"`
-	Hash           []byte                            `json:"hash"`
-	Validator      string                            `json:"validator"`
-	Signature      []byte                            `json:"signature,omitempty"`
+	Height         int64     `json:"height"`
+	Timestamp      time.Time `json:"timestamp"`
+	Transactions   []any     `json:"transactions"`
+	AccountCreates []any     `json:"account_creates,omitempty"`
+	PreviousHash   []byte    `json:"previous_hash"`
+	Hash           []byte    `json:"hash"`
+	Validator      string    `json:"validator"`
+	Signature      []byte    `json:"signature,omitempty"`
 }
 
 // ResolveViewer maps a private key query value to an account viewer or validator auditor.
@@ -48,13 +55,19 @@ func ResolveViewer(keystore config.Keystore, validatorPrivB64, pkey string) View
 	if pkey == "" {
 		return Viewer{}
 	}
+
+	pubKeyB64 := ""
+	if priv, err := crypto.ParsePrivateKey(pkey); err == nil {
+		pubKeyB64 = crypto.PublicKeyBase64(priv.Public().(ed25519.PublicKey))
+	}
+
 	if config.SamePrivateKey(pkey, validatorPrivB64) {
-		return Viewer{Audit: true}
+		return Viewer{Audit: true, PublicKey: pubKeyB64}
 	}
 	if id, ok := keystore.AccountIDForPrivateKey(pkey); ok {
-		return Viewer{AccountID: id}
+		return Viewer{AccountID: id, PublicKey: pubKeyB64}
 	}
-	return Viewer{}
+	return Viewer{PublicKey: pubKeyB64}
 }
 
 // PresentTx returns the full domain TX or a PublicTx depending on the viewer.
@@ -71,23 +84,40 @@ func PresentTx(tx domain.PaymentTransaction, viewer Viewer, pubKeyB64 func(domai
 		Timestamp: tx.Timestamp,
 		Payer:     pubKeyB64(tx.Payer.ID),
 		Payee:     pubKeyB64(tx.Payee.ID),
-		Currency:  tx.Currency,
 		Items:     items,
 		Signature: opaqueTokenBytes(tx.Signature),
 	}
 }
 
-// PresentBlock applies PresentTx to every transaction in the block.
+// PresentAccountCreate returns the full create or a PublicAccountCreate depending on the viewer.
+func PresentAccountCreate(tx domain.AccountCreateTransaction, viewer Viewer) any {
+	if viewer.Audit ||
+		viewer.AccountID == string(tx.Account.ID) ||
+		(viewer.PublicKey != "" && viewer.PublicKey == tx.PublicKey) {
+		return tx
+	}
+	return PublicAccountCreate{
+		Timestamp: tx.Timestamp,
+		PublicKey: tx.PublicKey,
+		Signature: opaqueTokenBytes(tx.Signature),
+	}
+}
+
+// PresentBlock applies PresentTx / PresentAccountCreate to every entry in the block.
 func PresentBlock(block domain.Block, viewer Viewer, pubKeyB64 func(domain.AccountID) string) PublicBlock {
 	txs := make([]any, len(block.Transactions))
 	for i, tx := range block.Transactions {
 		txs[i] = PresentTx(tx, viewer, pubKeyB64)
 	}
+	creates := make([]any, len(block.AccountCreates))
+	for i, create := range block.AccountCreates {
+		creates[i] = PresentAccountCreate(create, viewer)
+	}
 	return PublicBlock{
 		Height:         block.Height,
 		Timestamp:      block.Timestamp,
 		Transactions:   txs,
-		AccountCreates: block.AccountCreates,
+		AccountCreates: creates,
 		PreviousHash:   block.PreviousHash,
 		Hash:           block.Hash,
 		Validator:      block.Validator,

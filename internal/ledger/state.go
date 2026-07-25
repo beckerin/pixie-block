@@ -56,12 +56,11 @@ func (s *State) Clone() *State {
 	return clone
 }
 
-func (s *State) SetBalance(id domain.AccountID, balance int64, currency string) {
+func (s *State) SetBalance(id domain.AccountID, balance int64) {
 	existing, ok := s.Accounts[id]
 	acct := domain.Account{
-		ID:       id,
-		Balance:  balance,
-		Currency: currency,
+		ID:      id,
+		Balance: balance,
 	}
 	if ok {
 		acct.Type = existing.Type
@@ -91,9 +90,6 @@ func ValidateTransaction(tx domain.PaymentTransaction, state *State) error {
 	}
 	if tx.Payer.ID == "" || tx.Payee.ID == "" {
 		return fmt.Errorf("payer and payee are required")
-	}
-	if tx.Currency == "" {
-		return fmt.Errorf("currency is required")
 	}
 	if len(tx.Items) == 0 {
 		return fmt.Errorf("at least one line item is required")
@@ -145,14 +141,6 @@ func ValidateTransaction(tx domain.PaymentTransaction, state *State) error {
 	}
 	if payerBalance < gross {
 		return fmt.Errorf("insufficient balance: have %d need %d", payerBalance, gross)
-	}
-
-	payeeAcct, ok := state.Accounts[tx.Payee.ID]
-	if !ok {
-		return fmt.Errorf("payee account %q not found", tx.Payee.ID)
-	}
-	if payeeAcct.Currency != tx.Currency {
-		return fmt.Errorf("payee currency mismatch")
 	}
 
 	if len(tx.Signature) == 0 {
@@ -245,9 +233,6 @@ func ValidateAccountCreate(tx domain.AccountCreateTransaction, state *State) err
 	default:
 		return fmt.Errorf("account type %q is not allowed; must be person or merchant", tx.Account.Type)
 	}
-	if tx.Account.Currency == "" {
-		return fmt.Errorf("currency is required")
-	}
 	if tx.Account.Balance != 0 {
 		return fmt.Errorf("new account balance must be 0")
 	}
@@ -292,10 +277,9 @@ func ApplyAccountCreate(tx domain.AccountCreateTransaction, state *State) error 
 		return err
 	}
 	state.SetAccount(domain.Account{
-		ID:       tx.Account.ID,
-		Type:     tx.Account.Type,
-		Balance:  0,
-		Currency: tx.Account.Currency,
+		ID:      tx.Account.ID,
+		Type:    tx.Account.Type,
+		Balance: 0,
 	})
 	state.SetAccountPubKey(string(tx.Account.ID), pub)
 	return nil

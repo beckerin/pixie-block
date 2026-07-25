@@ -16,7 +16,7 @@ func TestCreateAccountForbiddenWithoutValidator(t *testing.T) {
 	ks := &config.Keystore{}
 	server := api.NewServer(nil, mempool.New(), mempool.NewAccountCreatePool(), ks, "", "", false, nil, nil)
 
-	body := bytes.NewBufferString(`{"id":"person_005","type":"person","currency":"BRL"}`)
+	body := bytes.NewBufferString(`{"id":"person_005","type":"person"}`)
 	req := httptest.NewRequest(http.MethodPost, "/v1/accounts", body)
 	rr := httptest.NewRecorder()
 	server.Handler().ServeHTTP(rr, req)

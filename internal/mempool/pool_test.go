@@ -10,7 +10,7 @@ import (
 
 func TestTryAddRejectsWhenCheckFails(t *testing.T) {
 	pool := mempool.New()
-	tx := domain.PaymentTransaction{ID: "tx-1", Payer: domain.Account{ID: "a"}, Currency: "BRL"}
+	tx := domain.PaymentTransaction{ID: "tx-1", Payer: domain.Account{ID: "a"}}
 
 	err := pool.TryAdd(tx, func(int64) error {
 		return fmt.Errorf("insufficient balance: have 0 need 100")

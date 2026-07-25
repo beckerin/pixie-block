@@ -18,10 +18,9 @@ import (
 )
 
 type account struct {
-	ID       string `json:"id"`
-	Type     string `json:"type"`
-	Balance  int64  `json:"balance"`
-	Currency string `json:"currency"`
+	ID      string `json:"id"`
+	Type    string `json:"type"`
+	Balance int64  `json:"balance"`
 }
 
 type lineItem struct {
@@ -31,10 +30,9 @@ type lineItem struct {
 }
 
 type submitReq struct {
-	Payer    string     `json:"payer"`
-	Payee    string     `json:"payee"`
-	Currency string     `json:"currency"`
-	Items    []lineItem `json:"items"`
+	Payer string     `json:"payer"`
+	Payee string     `json:"payee"`
+	Items []lineItem `json:"items"`
 }
 
 var descriptions = []string{
@@ -181,9 +179,8 @@ func main() {
 				}
 				idle = 0
 				req := submitReq{
-					Payer:    payer,
-					Payee:    payee.ID,
-					Currency: "BRL",
+					Payer: payer,
+					Payee: payee.ID,
 					Items: []lineItem{{
 						Description: descriptions[rng.Intn(len(descriptions))],
 						Amount:      amount,

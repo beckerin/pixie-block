@@ -39,9 +39,8 @@ func TestApplyTransactionWithTaxAndDiscount(t *testing.T) {
 	tx := signTx(domain.PaymentTransaction{
 		ID:        "tx-1",
 		Timestamp: time.Now().UTC(),
-		Payer:     domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0, Currency: "BRL"},
-		Payee:     domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0, Currency: "BRL"},
-		Currency:  "BRL",
+		Payer:     domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0},
+		Payee:     domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0},
 		Items: []domain.LineItem{{Description: "Serviço", Amount: 100000,
 			TaxCodes:  []domain.TaxCode{"ICMS"},
 			Discounts: []domain.Discount{{Code: "PIS_CREDIT", Amount: 1650, TaxAccount: "tax_treasury"}}}},
@@ -67,10 +66,9 @@ func TestApplyAccountCreate(t *testing.T) {
 		ID:        "create-1",
 		Timestamp: time.Now().UTC(),
 		Account: domain.Account{
-			ID:       "person_new",
-			Type:     domain.AccountTypePerson,
-			Balance:  0,
-			Currency: "BRL",
+			ID:      "person_new",
+			Type:    domain.AccountTypePerson,
+			Balance: 0,
 		},
 		PublicKey: crypto.PublicKeyBase64(acctPub),
 	})
@@ -90,7 +88,7 @@ func TestRejectDuplicateAccountCreate(t *testing.T) {
 	create := signAccountCreate(t, state, domain.AccountCreateTransaction{
 		ID:        "create-dup",
 		Timestamp: time.Now().UTC(),
-		Account:   domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0, Currency: "BRL"},
+		Account:   domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0},
 		PublicKey: crypto.PublicKeyBase64(acctPub),
 	})
 	if err := ledger.ApplyAccountCreate(create, state); err == nil {
@@ -104,7 +102,7 @@ func TestRejectTreasuryAccountCreate(t *testing.T) {
 	create := signAccountCreate(t, state, domain.AccountCreateTransaction{
 		ID:        "create-treasury",
 		Timestamp: time.Now().UTC(),
-		Account:   domain.Account{ID: "new_treasury", Type: domain.AccountTypeTreasury, Balance: 0, Currency: "BRL"},
+		Account:   domain.Account{ID: "new_treasury", Type: domain.AccountTypeTreasury, Balance: 0},
 		PublicKey: crypto.PublicKeyBase64(acctPub),
 	})
 	if err := ledger.ApplyAccountCreate(create, state); err == nil {
@@ -119,7 +117,7 @@ func TestRejectInvalidAccountCreateSignature(t *testing.T) {
 	create := domain.AccountCreateTransaction{
 		ID:        "create-bad-sig",
 		Timestamp: time.Now().UTC(),
-		Account:   domain.Account{ID: "person_bad", Type: domain.AccountTypePerson, Balance: 0, Currency: "BRL"},
+		Account:   domain.Account{ID: "person_bad", Type: domain.AccountTypePerson, Balance: 0},
 		PublicKey: crypto.PublicKeyBase64(acctPub),
 	}
 	signBytes, _ := crypto.AccountCreateSignBytes(create)
@@ -139,7 +137,7 @@ func TestBlockWithAccountCreateThenPayment(t *testing.T) {
 	create := signAccountCreate(t, state, domain.AccountCreateTransaction{
 		ID:        "create-pay",
 		Timestamp: time.Now().UTC(),
-		Account:   domain.Account{ID: "person_pay", Type: domain.AccountTypePerson, Balance: 0, Currency: "BRL"},
+		Account:   domain.Account{ID: "person_pay", Type: domain.AccountTypePerson, Balance: 0},
 		PublicKey: crypto.PublicKeyBase64(acctPub),
 	})
 
@@ -147,9 +145,8 @@ func TestBlockWithAccountCreateThenPayment(t *testing.T) {
 	payment := domain.PaymentTransaction{
 		ID:        "tx-to-new",
 		Timestamp: time.Now().UTC(),
-		Payer:     domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0, Currency: "BRL"},
-		Payee:     domain.Account{ID: "person_pay", Type: domain.AccountTypePerson, Balance: 0, Currency: "BRL"},
-		Currency:  "BRL",
+		Payer:     domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0},
+		Payee:     domain.Account{ID: "person_pay", Type: domain.AccountTypePerson, Balance: 0},
 		Items:     []domain.LineItem{{Description: "Gift", Amount: 5000}},
 	}
 	payment = signTx(payment)
@@ -189,9 +186,8 @@ func TestRejectNegativeNetToPayee(t *testing.T) {
 	tx := signTx(domain.PaymentTransaction{
 		ID:        "tx-bad",
 		Timestamp: time.Now().UTC(),
-		Payer:     domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0, Currency: "BRL"},
-		Payee:     domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0, Currency: "BRL"},
-		Currency:  "BRL",
+		Payer:     domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0},
+		Payee:     domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0},
 		Items: []domain.LineItem{{Description: "Serviço", Amount: 10000,
 			TaxCodes:  []domain.TaxCode{"ICMS"},
 			Discounts: []domain.Discount{{Code: "PIS", Amount: 9500, TaxAccount: "tax_treasury"}}}},
@@ -208,9 +204,8 @@ func TestRejectUnauthorizedTaxAccount(t *testing.T) {
 	tx := signTx(domain.PaymentTransaction{
 		ID:        "tx-tax",
 		Timestamp: time.Now().UTC(),
-		Payer:     domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0, Currency: "BRL"},
-		Payee:     domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0, Currency: "BRL"},
-		Currency:  "BRL",
+		Payer:     domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0},
+		Payee:     domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0},
 		Items: []domain.LineItem{{Description: "Serviço", Amount: 1000,
 			Discounts: []domain.Discount{{Code: "BAD", Amount: 100, TaxAccount: "other_tax"}}}},
 	})
@@ -226,9 +221,8 @@ func TestRejectInsufficientBalance(t *testing.T) {
 	tx := signTx(domain.PaymentTransaction{
 		ID:        "tx-broke",
 		Timestamp: time.Now().UTC(),
-		Payer:     domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0, Currency: "BRL"},
-		Payee:     domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0, Currency: "BRL"},
-		Currency:  "BRL",
+		Payer:     domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0},
+		Payee:     domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0},
 		Items: []domain.LineItem{{Description: "Grande", Amount: 2000000,
 			TaxCodes: []domain.TaxCode{"ICMS"},
 		}},
@@ -250,9 +244,9 @@ func newTestState(t *testing.T) *ledger.State {
 			},
 		},
 	})
-	state.SetBalance("tax_treasury", 0, "BRL")
-	state.SetBalance("merchant_001", 1000000, "BRL")
-	state.SetBalance("supplier_042", 0, "BRL")
+	state.SetBalance("tax_treasury", 0)
+	state.SetBalance("merchant_001", 1000000)
+	state.SetBalance("supplier_042", 0)
 	state.SetAccountPubKey("merchant_001", merchantPub)
 	state.AddValidator("validator-1", validatorPub)
 	return state

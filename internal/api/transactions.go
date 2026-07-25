@@ -15,10 +15,9 @@ import (
 )
 
 type submitTxRequest struct {
-	Payer    string            `json:"payer"`
-	Payee    string            `json:"payee"`
-	Currency string            `json:"currency"`
-	Items    []domain.LineItem `json:"items"`
+	Payer string            `json:"payer"`
+	Payee string            `json:"payee"`
+	Items []domain.LineItem `json:"items"`
 }
 
 func (s *Server) handleTransactions(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +72,6 @@ func (s *Server) buildTransaction(req submitTxRequest) (domain.PaymentTransactio
 		Timestamp: time.Now().UTC(),
 		Payer:     s.chain.State().Accounts[domain.AccountID(req.Payer)],
 		Payee:     s.chain.State().Accounts[domain.AccountID(req.Payee)],
-		Currency:  req.Currency,
 		Items:     req.Items,
 	}
 

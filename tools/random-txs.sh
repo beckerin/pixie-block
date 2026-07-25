@@ -218,7 +218,6 @@ while [[ "$ok" -lt "$COUNT" && "$attempt" -lt "$max_attempts" ]]; do
     '{
       payer: $payer,
       payee: $payee,
-      currency: "BRL",
       items: [{
         description: $desc,
         amount: $amount,

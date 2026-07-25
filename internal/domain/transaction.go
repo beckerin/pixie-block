@@ -28,7 +28,6 @@ type PaymentTransaction struct {
 	Timestamp time.Time  `json:"timestamp"`
 	Payer     Account    `json:"payer"`
 	Payee     Account    `json:"payee"`
-	Currency  string     `json:"currency"`
 	Items     []LineItem `json:"items"`
 	Signature []byte     `json:"signature,omitempty"`
 }

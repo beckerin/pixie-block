@@ -137,10 +137,9 @@ func (bc *Blockchain) validateChain(keystore config.Keystore) error {
 
 	for _, acct := range bc.genesis.Accounts {
 		state.SetAccount(domain.Account{
-			ID:       domain.AccountID(acct.ID),
-			Type:     acct.Type,
-			Balance:  acct.Balance,
-			Currency: acct.Currency,
+			ID:      domain.AccountID(acct.ID),
+			Type:    acct.Type,
+			Balance: acct.Balance,
 		})
 	}
 

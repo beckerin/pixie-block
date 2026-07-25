@@ -24,10 +24,9 @@ func BuildInitialState(genesis config.Genesis, keystore config.Keystore, taxes c
 
 	for _, acct := range genesis.Accounts {
 		state.SetAccount(domain.Account{
-			ID:       domain.AccountID(acct.ID),
-			Type:     acct.Type,
-			Balance:  acct.Balance,
-			Currency: acct.Currency,
+			ID:      domain.AccountID(acct.ID),
+			Type:    acct.Type,
+			Balance: acct.Balance,
 		})
 	}
 

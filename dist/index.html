@@ -248,8 +248,8 @@
         class="mt-4 rounded-lg bg-tide px-5 py-2.5 font-display text-sm font-bold text-white transition hover:bg-tideDark active:scale-[0.98] disabled:opacity-50"
         hx-ext="json-body"
         hx-post="/v1/transactions"
-        hx-json='{"payer":"person_001","payee":"merchant_001","currency":"BRL","items":[{"description":"Pagamento demo","amount":1000,"tax_codes":["CBS","IBS"]}]}'
-        hx-swap="none"
+        hx-json='{"payer":"person_001","payee":"merchant_001","items":[{"description":"Pagamento demo","amount":1000,"tax_codes":["CBS","IBS"]}]}'
+        hx-swap="none"    
         hx-disabled-elt="this"
         hx-on::after-request="onTxResult(document.getElementById('tx-status'), event)"
       >

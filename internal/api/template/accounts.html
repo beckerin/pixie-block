@@ -4,7 +4,7 @@
 {{range .}}
 <div class="flex items-baseline justify-between gap-4 border-b border-ink/10 py-3 last:border-0">
   <span class="font-mono text-sm text-ink">{{.ID}}</span>
-  <span class="font-mono text-sm font-medium text-tide">{{money .Balance .Currency}}</span>
+  <span class="font-mono text-sm font-medium text-tide">{{money .Balance}}</span>
 </div>
 {{end}}
 {{end}}

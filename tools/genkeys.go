@@ -12,10 +12,9 @@ import (
 )
 
 type account struct {
-	ID       string             `json:"id"`
-	Type     domain.AccountType `json:"type"`
-	Balance  int64              `json:"balance"`
-	Currency string             `json:"currency"`
+	ID      string             `json:"id"`
+	Type    domain.AccountType `json:"type"`
+	Balance int64              `json:"balance"`
 }
 
 type accountsFile struct {

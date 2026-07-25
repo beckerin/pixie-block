@@ -73,10 +73,7 @@ func PreviousBlockText(latestHeight int64, found bool, presentedJSON string) str
 	return presentedJSON
 }
 
-func formatMoney(balance int64, currency string) string {
-	if currency == "" {
-		currency = "BRL"
-	}
+func formatMoney(balance int64) string {
 	sign := ""
 	if balance < 0 {
 		sign = "-"
@@ -84,8 +81,5 @@ func formatMoney(balance int64, currency string) string {
 	}
 	whole := balance / 100
 	frac := balance % 100
-	if currency == "BRL" {
-		return fmt.Sprintf("%sR$ %d,%02d", sign, whole, frac)
-	}
-	return fmt.Sprintf("%s%s %d.%02d", sign, currency, whole, frac)
+	return fmt.Sprintf("%sR$ %d,%02d", sign, whole, frac)
 }

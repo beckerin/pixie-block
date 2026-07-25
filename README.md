@@ -87,7 +87,6 @@ curl -s -X POST http://localhost:8080/v1/transactions \
   -d '{
     "payer": "merchant_001",
     "payee": "supplier_042",
-    "currency": "BRL",
     "items": [
       { "description": "Serviço de consultoria", "amount": 100000 }
     ],

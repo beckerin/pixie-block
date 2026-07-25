@@ -12,7 +12,6 @@ type unsignedTransaction struct {
 	Timestamp string            `json:"timestamp"`
 	Payer     domain.Account    `json:"payer"`
 	Payee     domain.Account    `json:"payee"`
-	Currency  string            `json:"currency"`
 	Items     []domain.LineItem `json:"items"`
 }
 
@@ -38,7 +37,6 @@ func TransactionSignBytes(tx domain.PaymentTransaction) ([]byte, error) {
 		Timestamp: tx.Timestamp.UTC().Format("2006-01-02T15:04:05Z"),
 		Payer:     tx.Payer,
 		Payee:     tx.Payee,
-		Currency:  tx.Currency,
 		Items:     tx.Items,
 	}
 	return json.Marshal(payload)
@@ -62,7 +60,6 @@ func BlockSignBytes(block domain.Block) ([]byte, error) {
 			Timestamp: tx.Timestamp.UTC().Format("2006-01-02T15:04:05Z"),
 			Payer:     tx.Payer,
 			Payee:     tx.Payee,
-			Currency:  tx.Currency,
 			Items:     tx.Items,
 		}
 	}
