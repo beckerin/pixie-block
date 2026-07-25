@@ -68,7 +68,6 @@ Com o Makefile:
 | Docs | `http://localhost/v1/docs/` |
 | P2P | `:90` |
 
-O default do binário é `--api-addr :8080`; `make run` usa `:80`.
 
 ## Rodar cluster local (2 nós)
 
@@ -123,8 +122,8 @@ curl -N http://localhost/v1/chain
 | `--keystore` | `config/keystore.json` | Chaves de contas |
 | `--validator-key` | `config/validator-key.json` | Produtor PoA (`""` = follower) |
 | `--taxes` | `config/taxes.json` | Tabela de impostos |
-| `--api-addr` | `:8080` | HTTP |
-| `--p2p-listen` | `:9000` | P2P |
+| `--api-addr` | `:80` | HTTP |
+| `--p2p-listen` | `:90` | P2P |
 | `--node-id` | `node-1` | ID do nó |
 | `--peer` | — | Peers separados por vírgula |
 | `--bolt-nosync` | false | Bolt NoSync (demo) |
