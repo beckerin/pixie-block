@@ -10,7 +10,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
   <script src="https://unpkg.com/htmx-ext-sse@2.2.2"></script>
-  <script src="https://unpkg.com/htmx.org@2.0.4/dist/ext/json-enc.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -30,6 +29,19 @@
         },
       },
     };
+
+    // HTMX 2 FormData não preserva arrays/objetos aninhados.
+    // Esta extensão envia o JSON cru do atributo hx-json.
+    htmx.defineExtension('json-body', {
+      onEvent(name, evt) {
+        if (name === 'htmx:configRequest') {
+          evt.detail.headers['Content-Type'] = 'application/json';
+        }
+      },
+      encodeParameters(_xhr, _parameters, elt) {
+        return elt.getAttribute('hx-json');
+      },
+    });
 
     function onTxResult(el, evt) {
       if (evt.detail.successful) {
@@ -73,7 +85,7 @@
     }
   </style>
 </head>
-<body class="text-ink antialiased" hx-ext="json-enc,sse" sse-connect="/v1/chain">
+<body class="text-ink antialiased" hx-ext="sse" sse-connect="/v1/chain">
   <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
     <header class="mb-10">
       <p class="font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
@@ -124,9 +136,9 @@
       <button
         type="button"
         class="mt-4 rounded-lg bg-tide px-5 py-2.5 font-display text-sm font-bold text-white transition hover:bg-tideDark active:scale-[0.98] disabled:opacity-50"
+        hx-ext="json-body"
         hx-post="/v1/transactions"
-        hx-headers='{"Content-Type": "application/json"}'
-        hx-vals='{"payer":"person_001","payee":"merchant_001","currency":"BRL","items":[{"description":"Pagamento demo","amount":1000,"tax_codes":["CBS","IBS"]}]}'
+        hx-json='{"payer":"person_001","payee":"merchant_001","currency":"BRL","items":[{"description":"Pagamento demo","amount":1000,"tax_codes":["CBS","IBS"]}]}'
         hx-swap="none"
         hx-disabled-elt="this"
         hx-on::after-request="onTxResult(document.getElementById('tx-status'), event)"
