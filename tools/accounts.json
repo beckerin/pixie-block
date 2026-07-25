@@ -1,0 +1,894 @@
+{
+  "accounts": [
+    {
+      "id": "federal_treasury",
+      "balance": 47828162,
+      "currency": "BRL"
+    },
+    {
+      "id": "acre_treasury",
+      "balance": 2291857,
+      "currency": "BRL"
+    },
+    {
+      "id": "alagoas_treasury",
+      "balance": 1237431,
+      "currency": "BRL"
+    },
+    {
+      "id": "amapa_treasury",
+      "balance": 167588,
+      "currency": "BRL"
+    },
+    {
+      "id": "amazonas_treasury",
+      "balance": 4678663,
+      "currency": "BRL"
+    },
+    {
+      "id": "bahia_treasury",
+      "balance": 2580701,
+      "currency": "BRL"
+    },
+    {
+      "id": "ceara_treasury",
+      "balance": 3991557,
+      "currency": "BRL"
+    },
+    {
+      "id": "distrito_federal_treasury",
+      "balance": 2209334,
+      "currency": "BRL"
+    },
+    {
+      "id": "espirito_santo_treasury",
+      "balance": 1502537,
+      "currency": "BRL"
+    },
+    {
+      "id": "goias_treasury",
+      "balance": 1155772,
+      "currency": "BRL"
+    },
+    {
+      "id": "maranhao_treasury",
+      "balance": 599120,
+      "currency": "BRL"
+    },
+    {
+      "id": "mato_grosso_treasury",
+      "balance": 2707696,
+      "currency": "BRL"
+    },
+    {
+      "id": "mato_grosso_do_sul_treasury",
+      "balance": 615737,
+      "currency": "BRL"
+    },
+    {
+      "id": "minas_gerais_treasury",
+      "balance": 4766239,
+      "currency": "BRL"
+    },
+    {
+      "id": "para_treasury",
+      "balance": 1707729,
+      "currency": "BRL"
+    },
+    {
+      "id": "paraiba_treasury",
+      "balance": 4827381,
+      "currency": "BRL"
+    },
+    {
+      "id": "parana_treasury",
+      "balance": 4039184,
+      "currency": "BRL"
+    },
+    {
+      "id": "pernambuco_treasury",
+      "balance": 1951798,
+      "currency": "BRL"
+    },
+    {
+      "id": "piaui_treasury",
+      "balance": 3322501,
+      "currency": "BRL"
+    },
+    {
+      "id": "rio_de_janeiro_treasury",
+      "balance": 683914,
+      "currency": "BRL"
+    },
+    {
+      "id": "rio_grande_do_norte_treasury",
+      "balance": 2334002,
+      "currency": "BRL"
+    },
+    {
+      "id": "rio_grande_do_sul_treasury",
+      "balance": 2257248,
+      "currency": "BRL"
+    },
+    {
+      "id": "rondonia_treasury",
+      "balance": 3720483,
+      "currency": "BRL"
+    },
+    {
+      "id": "roraima_treasury",
+      "balance": 2796811,
+      "currency": "BRL"
+    },
+    {
+      "id": "santa_catarina_treasury",
+      "balance": 120270,
+      "currency": "BRL"
+    },
+    {
+      "id": "sao_paulo_treasury",
+      "balance": 3670537,
+      "currency": "BRL"
+    },
+    {
+      "id": "sergipe_treasury",
+      "balance": 1156754,
+      "currency": "BRL"
+    },
+    {
+      "id": "tocantins_treasury",
+      "balance": 2449179,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_001",
+      "balance": 2449,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_002",
+      "balance": 111741,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_003",
+      "balance": 176539,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_004",
+      "balance": 168564,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_005",
+      "balance": 109482,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_006",
+      "balance": 180504,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_007",
+      "balance": 133221,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_008",
+      "balance": 76935,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_009",
+      "balance": 35449,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_010",
+      "balance": 23366,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_011",
+      "balance": 137534,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_012",
+      "balance": 37872,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_013",
+      "balance": 117593,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_014",
+      "balance": 1775,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_015",
+      "balance": 39095,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_016",
+      "balance": 66334,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_017",
+      "balance": 189613,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_018",
+      "balance": 77589,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_019",
+      "balance": 46653,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_020",
+      "balance": 162736,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_021",
+      "balance": 137553,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_022",
+      "balance": 34396,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_023",
+      "balance": 11800,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_024",
+      "balance": 112966,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_025",
+      "balance": 182486,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_026",
+      "balance": 143813,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_027",
+      "balance": 190568,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_028",
+      "balance": 122218,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_029",
+      "balance": 136968,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_030",
+      "balance": 18711,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_031",
+      "balance": 60901,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_032",
+      "balance": 8563,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_033",
+      "balance": 164950,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_034",
+      "balance": 139357,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_035",
+      "balance": 40145,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_036",
+      "balance": 116374,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_037",
+      "balance": 124338,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_038",
+      "balance": 45014,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_039",
+      "balance": 38346,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_040",
+      "balance": 84848,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_041",
+      "balance": 195441,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_042",
+      "balance": 135748,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_043",
+      "balance": 160015,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_044",
+      "balance": 178383,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_045",
+      "balance": 74427,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_046",
+      "balance": 52371,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_047",
+      "balance": 75969,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_048",
+      "balance": 20673,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_049",
+      "balance": 112194,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_050",
+      "balance": 22421,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_051",
+      "balance": 130317,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_052",
+      "balance": 85930,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_053",
+      "balance": 49259,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_054",
+      "balance": 174162,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_055",
+      "balance": 90622,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_056",
+      "balance": 17856,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_057",
+      "balance": 81912,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_058",
+      "balance": 82337,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_059",
+      "balance": 153017,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_060",
+      "balance": 149061,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_061",
+      "balance": 101843,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_062",
+      "balance": 134555,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_063",
+      "balance": 173052,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_064",
+      "balance": 68169,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_065",
+      "balance": 124958,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_066",
+      "balance": 123027,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_067",
+      "balance": 198027,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_068",
+      "balance": 16435,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_069",
+      "balance": 119704,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_070",
+      "balance": 25924,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_071",
+      "balance": 198985,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_072",
+      "balance": 122719,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_073",
+      "balance": 85178,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_074",
+      "balance": 115262,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_075",
+      "balance": 114045,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_076",
+      "balance": 118697,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_077",
+      "balance": 146919,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_078",
+      "balance": 131559,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_079",
+      "balance": 125534,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_080",
+      "balance": 16822,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_081",
+      "balance": 26568,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_082",
+      "balance": 191988,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_083",
+      "balance": 142460,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_084",
+      "balance": 29001,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_085",
+      "balance": 32566,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_086",
+      "balance": 83874,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_087",
+      "balance": 141291,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_088",
+      "balance": 166339,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_089",
+      "balance": 177022,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_090",
+      "balance": 26365,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_091",
+      "balance": 117305,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_092",
+      "balance": 48381,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_093",
+      "balance": 57814,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_094",
+      "balance": 133212,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_095",
+      "balance": 167791,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_096",
+      "balance": 117025,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_097",
+      "balance": 159522,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_098",
+      "balance": 127113,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_099",
+      "balance": 82716,
+      "currency": "BRL"
+    },
+    {
+      "id": "person_100",
+      "balance": 192941,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_001",
+      "balance": 39891,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_002",
+      "balance": 1385,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_003",
+      "balance": 5337,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_004",
+      "balance": 14586,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_005",
+      "balance": 18361,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_006",
+      "balance": 27864,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_007",
+      "balance": 18922,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_008",
+      "balance": 44874,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_009",
+      "balance": 31750,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_010",
+      "balance": 36095,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_011",
+      "balance": 20365,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_012",
+      "balance": 48947,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_013",
+      "balance": 16730,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_014",
+      "balance": 16444,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_015",
+      "balance": 11968,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_016",
+      "balance": 8097,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_017",
+      "balance": 31120,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_018",
+      "balance": 31526,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_019",
+      "balance": 32638,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_020",
+      "balance": 1292,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_021",
+      "balance": 6372,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_022",
+      "balance": 22183,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_023",
+      "balance": 32656,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_024",
+      "balance": 43398,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_025",
+      "balance": 34714,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_026",
+      "balance": 17791,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_027",
+      "balance": 15239,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_028",
+      "balance": 37428,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_029",
+      "balance": 35823,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_030",
+      "balance": 39280,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_031",
+      "balance": 8703,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_032",
+      "balance": 46605,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_033",
+      "balance": 21769,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_034",
+      "balance": 13388,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_035",
+      "balance": 49520,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_036",
+      "balance": 35428,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_037",
+      "balance": 18719,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_038",
+      "balance": 38611,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_039",
+      "balance": 25238,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_040",
+      "balance": 48416,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_041",
+      "balance": 39669,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_042",
+      "balance": 14292,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_043",
+      "balance": 45755,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_044",
+      "balance": 2980,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_045",
+      "balance": 38268,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_046",
+      "balance": 38502,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_047",
+      "balance": 7548,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_048",
+      "balance": 41170,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_049",
+      "balance": 34415,
+      "currency": "BRL"
+    },
+    {
+      "id": "merchant_050",
+      "balance": 44975,
+      "currency": "BRL"
+    }
+  ]
+}
