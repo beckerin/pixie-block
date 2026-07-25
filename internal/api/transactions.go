@@ -59,14 +59,33 @@ func (s *Server) handleTransactions(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, tx)
 }
 
+func validateTaxes(tx domain.PaymentTransaction) (bool, error) {
+	for _, item := range tx.Items {
+		for _, taxCode := range item.TaxCodes {
+			if tx.Payee.Type == domain.AccountTypePerson {
+				return false, fmt.Errorf("tax code %q is not allowed for person payee %q", taxCode, tx.Payee.ID)
+			}
+		}
+	}
+	return true, nil
+}
+
 func (s *Server) buildTransaction(req submitTxRequest) (domain.PaymentTransaction, error) {
 	tx := domain.PaymentTransaction{
 		ID:        newTxID(),
 		Timestamp: time.Now().UTC(),
-		Payer:     domain.AccountID(req.Payer),
-		Payee:     domain.AccountID(req.Payee),
+		Payer:     s.chain.State().Accounts[domain.AccountID(req.Payer)],
+		Payee:     s.chain.State().Accounts[domain.AccountID(req.Payee)],
 		Currency:  req.Currency,
 		Items:     req.Items,
+	}
+
+	taxOk, err := validateTaxes(tx)
+	if err != nil {
+		return domain.PaymentTransaction{}, err
+	}
+	if !taxOk {
+		return domain.PaymentTransaction{}, fmt.Errorf("tax validation failed")
 	}
 
 	privB64, ok := s.keystore.PrivateKeyFor(req.Payer)

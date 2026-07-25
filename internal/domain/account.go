@@ -1,9 +1,17 @@
 package domain
 
 type AccountID string
+type AccountType string
 
 type Account struct {
-	ID       AccountID `json:"id"`
-	Balance  int64     `json:"balance"`
-	Currency string    `json:"currency"`
+	ID       AccountID   `json:"id"`
+	Type     AccountType `json:"type"`
+	Balance  int64       `json:"balance"`
+	Currency string      `json:"currency"`
 }
+
+const (
+	AccountTypePerson   AccountType = "person"   // Pessoa física
+	AccountTypeMerchant AccountType = "merchant" // Pessoa jurídica
+	AccountTypeTreasury AccountType = "treasury" // Órgão fiscal
+)

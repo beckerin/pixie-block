@@ -56,11 +56,20 @@ func (s *State) Clone() *State {
 }
 
 func (s *State) SetBalance(id domain.AccountID, balance int64, currency string) {
-	s.Accounts[id] = domain.Account{
+	existing, ok := s.Accounts[id]
+	acct := domain.Account{
 		ID:       id,
 		Balance:  balance,
 		Currency: currency,
 	}
+	if ok {
+		acct.Type = existing.Type
+	}
+	s.Accounts[id] = acct
+}
+
+func (s *State) SetAccount(acct domain.Account) {
+	s.Accounts[acct.ID] = acct
 }
 
 func (s *State) Balance(id domain.AccountID) (int64, bool) {
@@ -79,7 +88,7 @@ func ValidateTransaction(tx domain.PaymentTransaction, state *State) error {
 	if tx.ID == "" {
 		return fmt.Errorf("transaction id is required")
 	}
-	if tx.Payer == "" || tx.Payee == "" {
+	if tx.Payer.ID == "" || tx.Payee.ID == "" {
 		return fmt.Errorf("payer and payee are required")
 	}
 	if tx.Currency == "" {
@@ -129,17 +138,17 @@ func ValidateTransaction(tx domain.PaymentTransaction, state *State) error {
 		return fmt.Errorf("net to payee cannot be negative")
 	}
 
-	payerBalance, ok := state.Balance(tx.Payer)
+	payerBalance, ok := state.Balance(tx.Payer.ID)
 	if !ok {
-		return fmt.Errorf("payer account %q not found", tx.Payer)
+		return fmt.Errorf("payer account %q not found", tx.Payer.ID)
 	}
 	if payerBalance < gross {
 		return fmt.Errorf("insufficient balance: have %d need %d", payerBalance, gross)
 	}
 
-	payeeAcct, ok := state.Accounts[tx.Payee]
+	payeeAcct, ok := state.Accounts[tx.Payee.ID]
 	if !ok {
-		return fmt.Errorf("payee account %q not found", tx.Payee)
+		return fmt.Errorf("payee account %q not found", tx.Payee.ID)
 	}
 	if payeeAcct.Currency != tx.Currency {
 		return fmt.Errorf("payee currency mismatch")
@@ -154,9 +163,9 @@ func ValidateTransaction(tx domain.PaymentTransaction, state *State) error {
 		return fmt.Errorf("canonical tx bytes: %w", err)
 	}
 
-	payerPub, ok := state.AccountPubKey(string(tx.Payer))
+	payerPub, ok := state.AccountPubKey(string(tx.Payer.ID))
 	if !ok {
-		return fmt.Errorf("payer public key not found for %q", tx.Payer)
+		return fmt.Errorf("payer public key not found for %q", tx.Payer.ID)
 	}
 	if !crypto.Verify(payerPub, signBytes, tx.Signature) {
 		return fmt.Errorf("invalid transaction signature")
@@ -189,13 +198,13 @@ func ApplyTransaction(tx domain.PaymentTransaction, state *State) error {
 	gross := tx.GrossAmount()
 	net := tx.NetToPayee(state.TaxSplit)
 
-	payer := state.Accounts[tx.Payer]
+	payer := state.Accounts[tx.Payer.ID]
 	payer.Balance -= gross
-	state.Accounts[tx.Payer] = payer
+	state.Accounts[tx.Payer.ID] = payer
 
-	payee := state.Accounts[tx.Payee]
+	payee := state.Accounts[tx.Payee.ID]
 	payee.Balance += net
-	state.Accounts[tx.Payee] = payee
+	state.Accounts[tx.Payee.ID] = payee
 
 	for _, item := range tx.Items {
 		for _, taxCode := range item.TaxCodes {

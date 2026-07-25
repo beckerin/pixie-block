@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/beckerin/pixie-block/internal/domain"
 )
 
 type account struct {
-	ID       string `json:"id"`
-	Balance  int64  `json:"balance"`
-	Currency string `json:"currency"`
+	ID       string             `json:"id"`
+	Type     domain.AccountType `json:"type"`
+	Balance  int64              `json:"balance"`
+	Currency string             `json:"currency"`
 }
 
 type accountsFile struct {
@@ -34,11 +37,11 @@ func main() {
 	allowedTax := make([]string, 0, 28)
 	keystoreEntries := make([]map[string]string, 0)
 	for _, acct := range accounts {
-		if isTaxAccount(acct.ID) {
+		if isTaxAccount(acct) {
 			allowedTax = append(allowedTax, acct.ID)
 			continue
 		}
-		if !needsKeystoreEntry(acct.ID) {
+		if !needsKeystoreEntry(acct) {
 			continue
 		}
 		_, priv, err := ed25519.GenerateKey(nil)
@@ -110,13 +113,54 @@ func loadAccounts(path string) ([]account, error) {
 	if len(file.Accounts) == 0 {
 		return nil, fmt.Errorf("accounts file has no accounts")
 	}
-	return file.Accounts, nil
+
+	out := make([]account, 0, len(file.Accounts))
+	for i, acct := range file.Accounts {
+		normalized, err := normalizeAccount(acct)
+		if err != nil {
+			return nil, fmt.Errorf("account[%d] %q: %w", i, acct.ID, err)
+		}
+		out = append(out, normalized)
+	}
+	return out, nil
 }
 
-func isTaxAccount(id string) bool {
-	return id == "federal_treasury" || strings.HasSuffix(id, "_treasury")
+func normalizeAccount(acct account) (account, error) {
+	if acct.ID == "" {
+		return acct, fmt.Errorf("id is required")
+	}
+	if acct.Type == "" {
+		inferred, err := inferAccountType(acct.ID)
+		if err != nil {
+			return acct, err
+		}
+		acct.Type = inferred
+	}
+	switch acct.Type {
+	case domain.AccountTypePerson, domain.AccountTypeMerchant, domain.AccountTypeTreasury:
+		return acct, nil
+	default:
+		return acct, fmt.Errorf("unknown type %q", acct.Type)
+	}
 }
 
-func needsKeystoreEntry(id string) bool {
-	return strings.HasPrefix(id, "person_") || strings.HasPrefix(id, "merchant_")
+func inferAccountType(id string) (domain.AccountType, error) {
+	switch {
+	case strings.HasPrefix(id, "person_"):
+		return domain.AccountTypePerson, nil
+	case strings.HasPrefix(id, "merchant_"):
+		return domain.AccountTypeMerchant, nil
+	case id == "federal_treasury" || strings.HasSuffix(id, "_treasury"):
+		return domain.AccountTypeTreasury, nil
+	default:
+		return "", fmt.Errorf("cannot infer type from id")
+	}
+}
+
+func isTaxAccount(acct account) bool {
+	return acct.Type == domain.AccountTypeTreasury
+}
+
+func needsKeystoreEntry(acct account) bool {
+	return acct.Type == domain.AccountTypePerson || acct.Type == domain.AccountTypeMerchant
 }

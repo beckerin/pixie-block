@@ -2,891 +2,1069 @@
   "accounts": [
     {
       "id": "federal_treasury",
+      "type": "treasury",
       "balance": 47828162,
       "currency": "BRL"
     },
     {
       "id": "acre_treasury",
+      "type": "treasury",
       "balance": 2291857,
       "currency": "BRL"
     },
     {
       "id": "alagoas_treasury",
+      "type": "treasury",
       "balance": 1237431,
       "currency": "BRL"
     },
     {
       "id": "amapa_treasury",
+      "type": "treasury",
       "balance": 167588,
       "currency": "BRL"
     },
     {
       "id": "amazonas_treasury",
+      "type": "treasury",
       "balance": 4678663,
       "currency": "BRL"
     },
     {
       "id": "bahia_treasury",
+      "type": "treasury",
       "balance": 2580701,
       "currency": "BRL"
     },
     {
       "id": "ceara_treasury",
+      "type": "treasury",
       "balance": 3991557,
       "currency": "BRL"
     },
     {
       "id": "distrito_federal_treasury",
+      "type": "treasury",
       "balance": 2209334,
       "currency": "BRL"
     },
     {
       "id": "espirito_santo_treasury",
+      "type": "treasury",
       "balance": 1502537,
       "currency": "BRL"
     },
     {
       "id": "goias_treasury",
+      "type": "treasury",
       "balance": 1155772,
       "currency": "BRL"
     },
     {
       "id": "maranhao_treasury",
+      "type": "treasury",
       "balance": 599120,
       "currency": "BRL"
     },
     {
       "id": "mato_grosso_treasury",
+      "type": "treasury",
       "balance": 2707696,
       "currency": "BRL"
     },
     {
       "id": "mato_grosso_do_sul_treasury",
+      "type": "treasury",
       "balance": 615737,
       "currency": "BRL"
     },
     {
       "id": "minas_gerais_treasury",
+      "type": "treasury",
       "balance": 4766239,
       "currency": "BRL"
     },
     {
       "id": "para_treasury",
+      "type": "treasury",
       "balance": 1707729,
       "currency": "BRL"
     },
     {
       "id": "paraiba_treasury",
+      "type": "treasury",
       "balance": 4827381,
       "currency": "BRL"
     },
     {
       "id": "parana_treasury",
+      "type": "treasury",
       "balance": 4039184,
       "currency": "BRL"
     },
     {
       "id": "pernambuco_treasury",
+      "type": "treasury",
       "balance": 1951798,
       "currency": "BRL"
     },
     {
       "id": "piaui_treasury",
+      "type": "treasury",
       "balance": 3322501,
       "currency": "BRL"
     },
     {
       "id": "rio_de_janeiro_treasury",
+      "type": "treasury",
       "balance": 683914,
       "currency": "BRL"
     },
     {
       "id": "rio_grande_do_norte_treasury",
+      "type": "treasury",
       "balance": 2334002,
       "currency": "BRL"
     },
     {
       "id": "rio_grande_do_sul_treasury",
+      "type": "treasury",
       "balance": 2257248,
       "currency": "BRL"
     },
     {
       "id": "rondonia_treasury",
+      "type": "treasury",
       "balance": 3720483,
       "currency": "BRL"
     },
     {
       "id": "roraima_treasury",
+      "type": "treasury",
       "balance": 2796811,
       "currency": "BRL"
     },
     {
       "id": "santa_catarina_treasury",
+      "type": "treasury",
       "balance": 120270,
       "currency": "BRL"
     },
     {
       "id": "sao_paulo_treasury",
+      "type": "treasury",
       "balance": 3670537,
       "currency": "BRL"
     },
     {
       "id": "sergipe_treasury",
+      "type": "treasury",
       "balance": 1156754,
       "currency": "BRL"
     },
     {
       "id": "tocantins_treasury",
+      "type": "treasury",
       "balance": 2449179,
       "currency": "BRL"
     },
     {
       "id": "person_001",
+      "type": "person",
       "balance": 2449,
       "currency": "BRL"
     },
     {
       "id": "person_002",
+      "type": "person",
       "balance": 111741,
       "currency": "BRL"
     },
     {
       "id": "person_003",
+      "type": "person",
       "balance": 176539,
       "currency": "BRL"
     },
     {
       "id": "person_004",
+      "type": "person",
       "balance": 168564,
       "currency": "BRL"
     },
     {
       "id": "person_005",
+      "type": "person",
       "balance": 109482,
       "currency": "BRL"
     },
     {
       "id": "person_006",
+      "type": "person",
       "balance": 180504,
       "currency": "BRL"
     },
     {
       "id": "person_007",
+      "type": "person",
       "balance": 133221,
       "currency": "BRL"
     },
     {
       "id": "person_008",
+      "type": "person",
       "balance": 76935,
       "currency": "BRL"
     },
     {
       "id": "person_009",
+      "type": "person",
       "balance": 35449,
       "currency": "BRL"
     },
     {
       "id": "person_010",
+      "type": "person",
       "balance": 23366,
       "currency": "BRL"
     },
     {
       "id": "person_011",
+      "type": "person",
       "balance": 137534,
       "currency": "BRL"
     },
     {
       "id": "person_012",
+      "type": "person",
       "balance": 37872,
       "currency": "BRL"
     },
     {
       "id": "person_013",
+      "type": "person",
       "balance": 117593,
       "currency": "BRL"
     },
     {
       "id": "person_014",
+      "type": "person",
       "balance": 1775,
       "currency": "BRL"
     },
     {
       "id": "person_015",
+      "type": "person",
       "balance": 39095,
       "currency": "BRL"
     },
     {
       "id": "person_016",
+      "type": "person",
       "balance": 66334,
       "currency": "BRL"
     },
     {
       "id": "person_017",
+      "type": "person",
       "balance": 189613,
       "currency": "BRL"
     },
     {
       "id": "person_018",
+      "type": "person",
       "balance": 77589,
       "currency": "BRL"
     },
     {
       "id": "person_019",
+      "type": "person",
       "balance": 46653,
       "currency": "BRL"
     },
     {
       "id": "person_020",
+      "type": "person",
       "balance": 162736,
       "currency": "BRL"
     },
     {
       "id": "person_021",
+      "type": "person",
       "balance": 137553,
       "currency": "BRL"
     },
     {
       "id": "person_022",
+      "type": "person",
       "balance": 34396,
       "currency": "BRL"
     },
     {
       "id": "person_023",
+      "type": "person",
       "balance": 11800,
       "currency": "BRL"
     },
     {
       "id": "person_024",
+      "type": "person",
       "balance": 112966,
       "currency": "BRL"
     },
     {
       "id": "person_025",
+      "type": "person",
       "balance": 182486,
       "currency": "BRL"
     },
     {
       "id": "person_026",
+      "type": "person",
       "balance": 143813,
       "currency": "BRL"
     },
     {
       "id": "person_027",
+      "type": "person",
       "balance": 190568,
       "currency": "BRL"
     },
     {
       "id": "person_028",
+      "type": "person",
       "balance": 122218,
       "currency": "BRL"
     },
     {
       "id": "person_029",
+      "type": "person",
       "balance": 136968,
       "currency": "BRL"
     },
     {
       "id": "person_030",
+      "type": "person",
       "balance": 18711,
       "currency": "BRL"
     },
     {
       "id": "person_031",
+      "type": "person",
       "balance": 60901,
       "currency": "BRL"
     },
     {
       "id": "person_032",
+      "type": "person",
       "balance": 8563,
       "currency": "BRL"
     },
     {
       "id": "person_033",
+      "type": "person",
       "balance": 164950,
       "currency": "BRL"
     },
     {
       "id": "person_034",
+      "type": "person",
       "balance": 139357,
       "currency": "BRL"
     },
     {
       "id": "person_035",
+      "type": "person",
       "balance": 40145,
       "currency": "BRL"
     },
     {
       "id": "person_036",
+      "type": "person",
       "balance": 116374,
       "currency": "BRL"
     },
     {
       "id": "person_037",
+      "type": "person",
       "balance": 124338,
       "currency": "BRL"
     },
     {
       "id": "person_038",
+      "type": "person",
       "balance": 45014,
       "currency": "BRL"
     },
     {
       "id": "person_039",
+      "type": "person",
       "balance": 38346,
       "currency": "BRL"
     },
     {
       "id": "person_040",
+      "type": "person",
       "balance": 84848,
       "currency": "BRL"
     },
     {
       "id": "person_041",
+      "type": "person",
       "balance": 195441,
       "currency": "BRL"
     },
     {
       "id": "person_042",
+      "type": "person",
       "balance": 135748,
       "currency": "BRL"
     },
     {
       "id": "person_043",
+      "type": "person",
       "balance": 160015,
       "currency": "BRL"
     },
     {
       "id": "person_044",
+      "type": "person",
       "balance": 178383,
       "currency": "BRL"
     },
     {
       "id": "person_045",
+      "type": "person",
       "balance": 74427,
       "currency": "BRL"
     },
     {
       "id": "person_046",
+      "type": "person",
       "balance": 52371,
       "currency": "BRL"
     },
     {
       "id": "person_047",
+      "type": "person",
       "balance": 75969,
       "currency": "BRL"
     },
     {
       "id": "person_048",
+      "type": "person",
       "balance": 20673,
       "currency": "BRL"
     },
     {
       "id": "person_049",
+      "type": "person",
       "balance": 112194,
       "currency": "BRL"
     },
     {
       "id": "person_050",
+      "type": "person",
       "balance": 22421,
       "currency": "BRL"
     },
     {
       "id": "person_051",
+      "type": "person",
       "balance": 130317,
       "currency": "BRL"
     },
     {
       "id": "person_052",
+      "type": "person",
       "balance": 85930,
       "currency": "BRL"
     },
     {
       "id": "person_053",
+      "type": "person",
       "balance": 49259,
       "currency": "BRL"
     },
     {
       "id": "person_054",
+      "type": "person",
       "balance": 174162,
       "currency": "BRL"
     },
     {
       "id": "person_055",
+      "type": "person",
       "balance": 90622,
       "currency": "BRL"
     },
     {
       "id": "person_056",
+      "type": "person",
       "balance": 17856,
       "currency": "BRL"
     },
     {
       "id": "person_057",
+      "type": "person",
       "balance": 81912,
       "currency": "BRL"
     },
     {
       "id": "person_058",
+      "type": "person",
       "balance": 82337,
       "currency": "BRL"
     },
     {
       "id": "person_059",
+      "type": "person",
       "balance": 153017,
       "currency": "BRL"
     },
     {
       "id": "person_060",
+      "type": "person",
       "balance": 149061,
       "currency": "BRL"
     },
     {
       "id": "person_061",
+      "type": "person",
       "balance": 101843,
       "currency": "BRL"
     },
     {
       "id": "person_062",
+      "type": "person",
       "balance": 134555,
       "currency": "BRL"
     },
     {
       "id": "person_063",
+      "type": "person",
       "balance": 173052,
       "currency": "BRL"
     },
     {
       "id": "person_064",
+      "type": "person",
       "balance": 68169,
       "currency": "BRL"
     },
     {
       "id": "person_065",
+      "type": "person",
       "balance": 124958,
       "currency": "BRL"
     },
     {
       "id": "person_066",
+      "type": "person",
       "balance": 123027,
       "currency": "BRL"
     },
     {
       "id": "person_067",
+      "type": "person",
       "balance": 198027,
       "currency": "BRL"
     },
     {
       "id": "person_068",
+      "type": "person",
       "balance": 16435,
       "currency": "BRL"
     },
     {
       "id": "person_069",
+      "type": "person",
       "balance": 119704,
       "currency": "BRL"
     },
     {
       "id": "person_070",
+      "type": "person",
       "balance": 25924,
       "currency": "BRL"
     },
     {
       "id": "person_071",
+      "type": "person",
       "balance": 198985,
       "currency": "BRL"
     },
     {
       "id": "person_072",
+      "type": "person",
       "balance": 122719,
       "currency": "BRL"
     },
     {
       "id": "person_073",
+      "type": "person",
       "balance": 85178,
       "currency": "BRL"
     },
     {
       "id": "person_074",
+      "type": "person",
       "balance": 115262,
       "currency": "BRL"
     },
     {
       "id": "person_075",
+      "type": "person",
       "balance": 114045,
       "currency": "BRL"
     },
     {
       "id": "person_076",
+      "type": "person",
       "balance": 118697,
       "currency": "BRL"
     },
     {
       "id": "person_077",
+      "type": "person",
       "balance": 146919,
       "currency": "BRL"
     },
     {
       "id": "person_078",
+      "type": "person",
       "balance": 131559,
       "currency": "BRL"
     },
     {
       "id": "person_079",
+      "type": "person",
       "balance": 125534,
       "currency": "BRL"
     },
     {
       "id": "person_080",
+      "type": "person",
       "balance": 16822,
       "currency": "BRL"
     },
     {
       "id": "person_081",
+      "type": "person",
       "balance": 26568,
       "currency": "BRL"
     },
     {
       "id": "person_082",
+      "type": "person",
       "balance": 191988,
       "currency": "BRL"
     },
     {
       "id": "person_083",
+      "type": "person",
       "balance": 142460,
       "currency": "BRL"
     },
     {
       "id": "person_084",
+      "type": "person",
       "balance": 29001,
       "currency": "BRL"
     },
     {
       "id": "person_085",
+      "type": "person",
       "balance": 32566,
       "currency": "BRL"
     },
     {
       "id": "person_086",
+      "type": "person",
       "balance": 83874,
       "currency": "BRL"
     },
     {
       "id": "person_087",
+      "type": "person",
       "balance": 141291,
       "currency": "BRL"
     },
     {
       "id": "person_088",
+      "type": "person",
       "balance": 166339,
       "currency": "BRL"
     },
     {
       "id": "person_089",
+      "type": "person",
       "balance": 177022,
       "currency": "BRL"
     },
     {
       "id": "person_090",
+      "type": "person",
       "balance": 26365,
       "currency": "BRL"
     },
     {
       "id": "person_091",
+      "type": "person",
       "balance": 117305,
       "currency": "BRL"
     },
     {
       "id": "person_092",
+      "type": "person",
       "balance": 48381,
       "currency": "BRL"
     },
     {
       "id": "person_093",
+      "type": "person",
       "balance": 57814,
       "currency": "BRL"
     },
     {
       "id": "person_094",
+      "type": "person",
       "balance": 133212,
       "currency": "BRL"
     },
     {
       "id": "person_095",
+      "type": "person",
       "balance": 167791,
       "currency": "BRL"
     },
     {
       "id": "person_096",
+      "type": "person",
       "balance": 117025,
       "currency": "BRL"
     },
     {
       "id": "person_097",
+      "type": "person",
       "balance": 159522,
       "currency": "BRL"
     },
     {
       "id": "person_098",
+      "type": "person",
       "balance": 127113,
       "currency": "BRL"
     },
     {
       "id": "person_099",
+      "type": "person",
       "balance": 82716,
       "currency": "BRL"
     },
     {
       "id": "person_100",
+      "type": "person",
       "balance": 192941,
       "currency": "BRL"
     },
     {
       "id": "merchant_001",
+      "type": "merchant",
       "balance": 39891,
       "currency": "BRL"
     },
     {
       "id": "merchant_002",
+      "type": "merchant",
       "balance": 1385,
       "currency": "BRL"
     },
     {
       "id": "merchant_003",
+      "type": "merchant",
       "balance": 5337,
       "currency": "BRL"
     },
     {
       "id": "merchant_004",
+      "type": "merchant",
       "balance": 14586,
       "currency": "BRL"
     },
     {
       "id": "merchant_005",
+      "type": "merchant",
       "balance": 18361,
       "currency": "BRL"
     },
     {
       "id": "merchant_006",
+      "type": "merchant",
       "balance": 27864,
       "currency": "BRL"
     },
     {
       "id": "merchant_007",
+      "type": "merchant",
       "balance": 18922,
       "currency": "BRL"
     },
     {
       "id": "merchant_008",
+      "type": "merchant",
       "balance": 44874,
       "currency": "BRL"
     },
     {
       "id": "merchant_009",
+      "type": "merchant",
       "balance": 31750,
       "currency": "BRL"
     },
     {
       "id": "merchant_010",
+      "type": "merchant",
       "balance": 36095,
       "currency": "BRL"
     },
     {
       "id": "merchant_011",
+      "type": "merchant",
       "balance": 20365,
       "currency": "BRL"
     },
     {
       "id": "merchant_012",
+      "type": "merchant",
       "balance": 48947,
       "currency": "BRL"
     },
     {
       "id": "merchant_013",
+      "type": "merchant",
       "balance": 16730,
       "currency": "BRL"
     },
     {
       "id": "merchant_014",
+      "type": "merchant",
       "balance": 16444,
       "currency": "BRL"
     },
     {
       "id": "merchant_015",
+      "type": "merchant",
       "balance": 11968,
       "currency": "BRL"
     },
     {
       "id": "merchant_016",
+      "type": "merchant",
       "balance": 8097,
       "currency": "BRL"
     },
     {
       "id": "merchant_017",
+      "type": "merchant",
       "balance": 31120,
       "currency": "BRL"
     },
     {
       "id": "merchant_018",
+      "type": "merchant",
       "balance": 31526,
       "currency": "BRL"
     },
     {
       "id": "merchant_019",
+      "type": "merchant",
       "balance": 32638,
       "currency": "BRL"
     },
     {
       "id": "merchant_020",
+      "type": "merchant",
       "balance": 1292,
       "currency": "BRL"
     },
     {
       "id": "merchant_021",
+      "type": "merchant",
       "balance": 6372,
       "currency": "BRL"
     },
     {
       "id": "merchant_022",
+      "type": "merchant",
       "balance": 22183,
       "currency": "BRL"
     },
     {
       "id": "merchant_023",
+      "type": "merchant",
       "balance": 32656,
       "currency": "BRL"
     },
     {
       "id": "merchant_024",
+      "type": "merchant",
       "balance": 43398,
       "currency": "BRL"
     },
     {
       "id": "merchant_025",
+      "type": "merchant",
       "balance": 34714,
       "currency": "BRL"
     },
     {
       "id": "merchant_026",
+      "type": "merchant",
       "balance": 17791,
       "currency": "BRL"
     },
     {
       "id": "merchant_027",
+      "type": "merchant",
       "balance": 15239,
       "currency": "BRL"
     },
     {
       "id": "merchant_028",
+      "type": "merchant",
       "balance": 37428,
       "currency": "BRL"
     },
     {
       "id": "merchant_029",
+      "type": "merchant",
       "balance": 35823,
       "currency": "BRL"
     },
     {
       "id": "merchant_030",
+      "type": "merchant",
       "balance": 39280,
       "currency": "BRL"
     },
     {
       "id": "merchant_031",
+      "type": "merchant",
       "balance": 8703,
       "currency": "BRL"
     },
     {
       "id": "merchant_032",
+      "type": "merchant",
       "balance": 46605,
       "currency": "BRL"
     },
     {
       "id": "merchant_033",
+      "type": "merchant",
       "balance": 21769,
       "currency": "BRL"
     },
     {
       "id": "merchant_034",
+      "type": "merchant",
       "balance": 13388,
       "currency": "BRL"
     },
     {
       "id": "merchant_035",
+      "type": "merchant",
       "balance": 49520,
       "currency": "BRL"
     },
     {
       "id": "merchant_036",
+      "type": "merchant",
       "balance": 35428,
       "currency": "BRL"
     },
     {
       "id": "merchant_037",
+      "type": "merchant",
       "balance": 18719,
       "currency": "BRL"
     },
     {
       "id": "merchant_038",
+      "type": "merchant",
       "balance": 38611,
       "currency": "BRL"
     },
     {
       "id": "merchant_039",
+      "type": "merchant",
       "balance": 25238,
       "currency": "BRL"
     },
     {
       "id": "merchant_040",
+      "type": "merchant",
       "balance": 48416,
       "currency": "BRL"
     },
     {
       "id": "merchant_041",
+      "type": "merchant",
       "balance": 39669,
       "currency": "BRL"
     },
     {
       "id": "merchant_042",
+      "type": "merchant",
       "balance": 14292,
       "currency": "BRL"
     },
     {
       "id": "merchant_043",
+      "type": "merchant",
       "balance": 45755,
       "currency": "BRL"
     },
     {
       "id": "merchant_044",
+      "type": "merchant",
       "balance": 2980,
       "currency": "BRL"
     },
     {
       "id": "merchant_045",
+      "type": "merchant",
       "balance": 38268,
       "currency": "BRL"
     },
     {
       "id": "merchant_046",
+      "type": "merchant",
       "balance": 38502,
       "currency": "BRL"
     },
     {
       "id": "merchant_047",
+      "type": "merchant",
       "balance": 7548,
       "currency": "BRL"
     },
     {
       "id": "merchant_048",
+      "type": "merchant",
       "balance": 41170,
       "currency": "BRL"
     },
     {
       "id": "merchant_049",
+      "type": "merchant",
       "balance": 34415,
       "currency": "BRL"
     },
     {
       "id": "merchant_050",
+      "type": "merchant",
       "balance": 44975,
       "currency": "BRL"
     }

@@ -54,6 +54,7 @@ Uso: $0 [opções]
 Opções:
   -c, --count N       Número de transações (default: ${COUNT})
   -a, --api URL       Base da API (default: ${API_URL})
+  -s, --sleep N       Pausa entre transações (default: ${BATCH_SLEEP})
   -m, --max-amount N  Valor máximo em centavos (default: ${MAX_AMOUNT})
       --min-amount N  Valor mínimo em centavos (default: ${MIN_AMOUNT})
       --dry-run       Só imprime o payload, não envia
@@ -65,6 +66,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -c|--count) COUNT="$2"; shift 2 ;;
     -a|--api) API_URL="$2"; shift 2 ;;
+    -s|--sleep) BATCH_SLEEP="$2"; shift 2 ;;
     -m|--max-amount) MAX_AMOUNT="$2"; shift 2 ;;
     --min-amount) MIN_AMOUNT="$2"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
@@ -101,29 +103,34 @@ ACCOUNTS_FILE="${WORKDIR}/accounts.txt"
 echo "Buscando contas em ${API_URL}/v1/accounts ..."
 curl -sf --max-time 10 "${API_URL}/v1/accounts" >"${WORKDIR}/accounts.json"
 
-# person_* e merchant_* têm chave no keystore e podem pagar
+# person/merchant têm chave no keystore e podem pagar; destino idem
 jq -r '
   .[]
-  | select(.id | test("^(person_|merchant_)"))
+  | select(.type == "person" or .type == "merchant")
   | select(.balance >= '"$MIN_AMOUNT"')
-  | "\(.id)\t\(.balance)"
+  | "\(.id)\t\(.balance)\t\(.type)"
 ' "${WORKDIR}/accounts.json" >"$BALANCES_FILE"
 
-jq -r '.[].id' "${WORKDIR}/accounts.json" \
-  | grep -E '^(person_|merchant_)' \
-  >"$ACCOUNTS_FILE"
+jq -r '
+  .[]
+  | select(.type == "person" or .type == "merchant")
+  | "\(.id)\t\(.type)"
+' "${WORKDIR}/accounts.json" >"$ACCOUNTS_FILE"
 
 cut -f1 "$BALANCES_FILE" >"$PAYERS_FILE"
 
 PAYER_COUNT="$(wc -l <"$PAYERS_FILE" | tr -d ' ')"
 ACCT_COUNT="$(wc -l <"$ACCOUNTS_FILE" | tr -d ' ')"
+PERSON_COUNT="$(awk -F'\t' '$3=="person"' "$BALANCES_FILE" | wc -l | tr -d ' ')"
+MERCHANT_COUNT="$(awk -F'\t' '$3=="merchant"' "$BALANCES_FILE" | wc -l | tr -d ' ')"
 
 if [[ "$PAYER_COUNT" -lt 2 ]]; then
   echo "Poucos pagadores com saldo (encontrados: ${PAYER_COUNT})" >&2
+  echo "Confirme que /v1/accounts expõe o campo type (person|merchant|treasury)." >&2
   exit 1
 fi
 
-echo "Pagadores com saldo: ${PAYER_COUNT} | Contas destino: ${ACCT_COUNT}"
+echo "Pagadores: ${PAYER_COUNT} (person=${PERSON_COUNT} merchant=${MERCHANT_COUNT}) | Destinos: ${ACCT_COUNT}"
 echo "Gerando ${COUNT} transações (min=${MIN_AMOUNT} max=${MAX_AMOUNT} centavos)..."
 echo
 
@@ -145,7 +152,7 @@ set_balance() {
     BEGIN{OFS="\t"}
     $1==id {$2=bal; updated=1}
     {print}
-    END{if(!updated) print id, bal}
+    END{if(!updated) print id, bal, "person"}
   ' "$BALANCES_FILE" >"$tmp"
   mv "$tmp" "$BALANCES_FILE"
 }
@@ -165,7 +172,9 @@ while [[ "$ok" -lt "$COUNT" && "$attempt" -lt "$max_attempts" ]]; do
   attempt=$((attempt + 1))
 
   payer="$(random_line "$PAYERS_FILE")"
-  payee="$(random_line "$ACCOUNTS_FILE")"
+  payee_line="$(random_line "$ACCOUNTS_FILE")"
+  payee="$(printf '%s' "$payee_line" | cut -f1)"
+  payee_type="$(printf '%s' "$payee_line" | cut -f2)"
   if [[ -z "$payer" || -z "$payee" || "$payer" == "$payee" ]]; then
     continue
   fi
@@ -190,7 +199,12 @@ while [[ "$ok" -lt "$COUNT" && "$attempt" -lt "$max_attempts" ]]; do
 
   amount=$((MIN_AMOUNT + RANDOM % (cap - MIN_AMOUNT + 1)))
   desc="${DESCRIPTIONS[$((RANDOM % ${#DESCRIPTIONS[@]}))]}"
-  taxes="${TAX_OPTIONS[$((RANDOM % ${#TAX_OPTIONS[@]}))]}"
+  # impostos só para recebedor merchant/treasury (regra da API)
+  if [[ "$payee_type" == "merchant" || "$payee_type" == "treasury" ]]; then
+    taxes="${TAX_OPTIONS[$((RANDOM % ${#TAX_OPTIONS[@]}))]}"
+  else
+    taxes='[]'
+  fi
 
   payload="$(jq -nc \
     --arg payer "$payer" \

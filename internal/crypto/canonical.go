@@ -10,8 +10,8 @@ import (
 type unsignedTransaction struct {
 	ID        string            `json:"id"`
 	Timestamp string            `json:"timestamp"`
-	Payer     domain.AccountID  `json:"payer"`
-	Payee     domain.AccountID  `json:"payee"`
+	Payer     domain.Account    `json:"payer"`
+	Payee     domain.Account    `json:"payee"`
 	Currency  string            `json:"currency"`
 	Items     []domain.LineItem `json:"items"`
 }

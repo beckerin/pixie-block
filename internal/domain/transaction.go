@@ -26,8 +26,8 @@ type Discount struct {
 type PaymentTransaction struct {
 	ID        string     `json:"id"`
 	Timestamp time.Time  `json:"timestamp"`
-	Payer     AccountID  `json:"payer"`
-	Payee     AccountID  `json:"payee"`
+	Payer     Account    `json:"payer"`
+	Payee     Account    `json:"payee"`
 	Currency  string     `json:"currency"`
 	Items     []LineItem `json:"items"`
 	Signature []byte     `json:"signature,omitempty"`

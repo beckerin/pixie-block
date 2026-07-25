@@ -26,8 +26,8 @@ func TestApplyTransactionWithTaxAndDiscount(t *testing.T) {
 	tx := signTx(domain.PaymentTransaction{
 		ID:        "tx-1",
 		Timestamp: time.Now().UTC(),
-		Payer:     "merchant_001",
-		Payee:     "supplier_042",
+		Payer:     domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0, Currency: "BRL"},
+		Payee:     domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0, Currency: "BRL"},
 		Currency:  "BRL",
 		Items: []domain.LineItem{{Description: "Serviço", Amount: 100000,
 			TaxCodes:  []domain.TaxCode{"ICMS"},
@@ -49,8 +49,8 @@ func TestRejectNegativeNetToPayee(t *testing.T) {
 	tx := signTx(domain.PaymentTransaction{
 		ID:        "tx-bad",
 		Timestamp: time.Now().UTC(),
-		Payer:     "merchant_001",
-		Payee:     "supplier_042",
+		Payer:     domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0, Currency: "BRL"},
+		Payee:     domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0, Currency: "BRL"},
 		Currency:  "BRL",
 		Items: []domain.LineItem{{Description: "Serviço", Amount: 10000,
 			TaxCodes:  []domain.TaxCode{"ICMS"},
@@ -68,8 +68,8 @@ func TestRejectUnauthorizedTaxAccount(t *testing.T) {
 	tx := signTx(domain.PaymentTransaction{
 		ID:        "tx-tax",
 		Timestamp: time.Now().UTC(),
-		Payer:     "merchant_001",
-		Payee:     "supplier_042",
+		Payer:     domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0, Currency: "BRL"},
+		Payee:     domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0, Currency: "BRL"},
 		Currency:  "BRL",
 		Items: []domain.LineItem{{Description: "Serviço", Amount: 1000,
 			Discounts: []domain.Discount{{Code: "BAD", Amount: 100, TaxAccount: "other_tax"}}}},
@@ -86,8 +86,8 @@ func TestRejectInsufficientBalance(t *testing.T) {
 	tx := signTx(domain.PaymentTransaction{
 		ID:        "tx-broke",
 		Timestamp: time.Now().UTC(),
-		Payer:     "merchant_001",
-		Payee:     "supplier_042",
+		Payer:     domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0, Currency: "BRL"},
+		Payee:     domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0, Currency: "BRL"},
 		Currency:  "BRL",
 		Items: []domain.LineItem{{Description: "Grande", Amount: 2000000,
 			TaxCodes: []domain.TaxCode{"ICMS"},
