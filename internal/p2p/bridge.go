@@ -17,28 +17,30 @@ import (
 var ErrNeedSync = errors.New("need chain sync")
 
 type Bridge struct {
-	chainID  string
-	nodeID   string
-	chain    *chain.Blockchain
-	mempool  *mempool.Pool
-	node     *Node
-	producer BlockProducer
+	chainID    string
+	nodeID     string
+	chain      *chain.Blockchain
+	mempool    *mempool.Pool
+	createPool *mempool.AccountCreatePool
+	node       *Node
+	producer   BlockProducer
 
 	mu sync.Mutex
 }
 
 type BlockProducer interface {
 	CanProduce(height int64) bool
-	CreateBlock(height int64, prev domain.Block, txs []domain.PaymentTransaction) (domain.Block, error)
+	CreateBlock(height int64, prev domain.Block, txs []domain.PaymentTransaction, creates []domain.AccountCreateTransaction) (domain.Block, error)
 }
 
-func NewBridge(chainID, nodeID string, bc *chain.Blockchain, pool *mempool.Pool, producer BlockProducer, listenAddr string, peers []string) *Bridge {
+func NewBridge(chainID, nodeID string, bc *chain.Blockchain, pool *mempool.Pool, createPool *mempool.AccountCreatePool, producer BlockProducer, listenAddr string, peers []string) *Bridge {
 	b := &Bridge{
-		chainID:  chainID,
-		nodeID:   nodeID,
-		chain:    bc,
-		mempool:  pool,
-		producer: producer,
+		chainID:    chainID,
+		nodeID:     nodeID,
+		chain:      bc,
+		mempool:    pool,
+		createPool: createPool,
+		producer:   producer,
 	}
 	b.node = New(listenAddr, peers, b)
 	return b
@@ -50,6 +52,10 @@ func (b *Bridge) Start() error {
 
 func (b *Bridge) BroadcastTransaction(tx domain.PaymentTransaction) {
 	b.node.Broadcast(MsgNewTransaction, tx)
+}
+
+func (b *Bridge) BroadcastAccountCreate(tx domain.AccountCreateTransaction) {
+	b.node.Broadcast(MsgNewAccountCreate, tx)
 }
 
 func (b *Bridge) BroadcastBlock(block domain.Block) {
@@ -67,6 +73,16 @@ func (b *Bridge) OnNewTransaction(data json.RawMessage) error {
 	}
 	return b.mempool.TryAdd(tx, func(reserved int64) error {
 		return b.chain.ValidateAdmit(tx, reserved)
+	})
+}
+
+func (b *Bridge) OnNewAccountCreate(data json.RawMessage) error {
+	var tx domain.AccountCreateTransaction
+	if err := json.Unmarshal(data, &tx); err != nil {
+		return err
+	}
+	return b.createPool.TryAdd(tx, func() error {
+		return b.chain.ValidateAccountCreate(tx)
 	})
 }
 
@@ -116,12 +132,18 @@ func (b *Bridge) applyBlocks(blocks []domain.Block) error {
 		if block.Height > b.chain.Height()+1 {
 			return fmt.Errorf("%w: got height %d, local %d", ErrNeedSync, block.Height, b.chain.Height())
 		}
-		ids := make([]string, len(block.Transactions))
+		txIDs := make([]string, len(block.Transactions))
 		for i, tx := range block.Transactions {
-			ids[i] = tx.ID
+			txIDs[i] = tx.ID
 		}
-		if err := b.mempool.Commit(ids, func() error {
-			return b.chain.AppendBlock(block)
+		createIDs := make([]string, len(block.AccountCreates))
+		for i, tx := range block.AccountCreates {
+			createIDs[i] = tx.ID
+		}
+		if err := b.mempool.Commit(txIDs, func() error {
+			return b.createPool.Commit(createIDs, func() error {
+				return b.chain.AppendBlock(block)
+			})
 		}); err != nil {
 			return err
 		}
@@ -147,23 +169,29 @@ func (b *Bridge) ProduceBlockIfReady() (domain.Block, bool, error) {
 	if maxTxs <= 0 {
 		maxTxs = 100
 	}
-	txs := b.selectExecutableTxs(maxTxs)
-	if len(txs) == 0 {
+	txs, creates := b.selectExecutable(maxTxs)
+	if len(txs) == 0 && len(creates) == 0 {
 		return domain.Block{}, false, nil
 	}
 
 	prev := b.chain.LatestBlock()
-	block, err := b.producer.CreateBlock(height, prev, txs)
+	block, err := b.producer.CreateBlock(height, prev, txs, creates)
 	if err != nil {
 		return domain.Block{}, false, err
 	}
 
-	ids := make([]string, len(txs))
+	txIDs := make([]string, len(txs))
 	for i, tx := range txs {
-		ids[i] = tx.ID
+		txIDs[i] = tx.ID
 	}
-	if err := b.mempool.Commit(ids, func() error {
-		return b.chain.AppendBlock(block)
+	createIDs := make([]string, len(creates))
+	for i, tx := range creates {
+		createIDs[i] = tx.ID
+	}
+	if err := b.mempool.Commit(txIDs, func() error {
+		return b.createPool.Commit(createIDs, func() error {
+			return b.chain.AppendBlock(block)
+		})
 	}); err != nil {
 		return domain.Block{}, false, err
 	}
@@ -172,20 +200,34 @@ func (b *Bridge) ProduceBlockIfReady() (domain.Block, bool, error) {
 	return block, true, nil
 }
 
-// selectExecutableTxs picks up to max txs that apply cleanly in order against
-// confirmed state, and drops mempool entries that are no longer executable.
-func (b *Bridge) selectExecutableTxs(max int) []domain.PaymentTransaction {
-	candidates := b.mempool.Peek(0)
-	if len(candidates) == 0 {
-		return nil
+// selectExecutable picks up to max account creates and payment txs that apply
+// cleanly in order against confirmed state (creates first).
+func (b *Bridge) selectExecutable(max int) ([]domain.PaymentTransaction, []domain.AccountCreateTransaction) {
+	state := b.chain.State()
+	creates := make([]domain.AccountCreateTransaction, 0)
+	var dropCreates []string
+
+	for _, tx := range b.createPool.Peek(0) {
+		if len(creates) >= max {
+			break
+		}
+		if err := ledger.ApplyAccountCreate(tx, state); err != nil {
+			dropCreates = append(dropCreates, tx.ID)
+			log.Printf("dropping invalid mempool account create %s: %v", tx.ID, err)
+			continue
+		}
+		creates = append(creates, tx)
+	}
+	if len(dropCreates) > 0 {
+		b.createPool.Remove(dropCreates...)
 	}
 
-	state := b.chain.State()
-	selected := make([]domain.PaymentTransaction, 0, max)
+	remaining := max - len(creates)
+	selected := make([]domain.PaymentTransaction, 0, remaining)
 	var drop []string
 
-	for _, tx := range candidates {
-		if len(selected) >= max {
+	for _, tx := range b.mempool.Peek(0) {
+		if len(selected) >= remaining {
 			break
 		}
 		if err := ledger.ApplyTransaction(tx, state); err != nil {
@@ -195,9 +237,8 @@ func (b *Bridge) selectExecutableTxs(max int) []domain.PaymentTransaction {
 		}
 		selected = append(selected, tx)
 	}
-
 	if len(drop) > 0 {
 		b.mempool.Remove(drop...)
 	}
-	return selected
+	return selected, creates
 }

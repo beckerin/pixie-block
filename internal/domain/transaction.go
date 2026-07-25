@@ -33,6 +33,16 @@ type PaymentTransaction struct {
 	Signature []byte     `json:"signature,omitempty"`
 }
 
+// AccountCreateTransaction registers a new person/merchant account on-chain.
+// Balance in Account must be 0; Signature is from a genesis validator.
+type AccountCreateTransaction struct {
+	ID        string    `json:"id"`
+	Timestamp time.Time `json:"timestamp"`
+	Account   Account   `json:"account"`
+	PublicKey string    `json:"public_key"`
+	Signature []byte    `json:"signature,omitempty"`
+}
+
 func (tx *PaymentTransaction) GrossAmount() int64 {
 	var total int64
 	for _, item := range tx.Items {

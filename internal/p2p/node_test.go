@@ -30,6 +30,8 @@ func (m *mockHandler) CurrentHeight() int64 {
 
 func (m *mockHandler) OnNewTransaction(json.RawMessage) error { return nil }
 
+func (m *mockHandler) OnNewAccountCreate(json.RawMessage) error { return nil }
+
 func (m *mockHandler) OnNewBlock(data json.RawMessage) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()

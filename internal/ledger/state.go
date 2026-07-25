@@ -232,6 +232,75 @@ func ApplyTransaction(tx domain.PaymentTransaction, state *State) error {
 	return nil
 }
 
+func ValidateAccountCreate(tx domain.AccountCreateTransaction, state *State) error {
+	if tx.ID == "" {
+		return fmt.Errorf("account create id is required")
+	}
+	if tx.Account.ID == "" {
+		return fmt.Errorf("account id is required")
+	}
+	switch tx.Account.Type {
+	case domain.AccountTypePerson, domain.AccountTypeMerchant:
+		// ok
+	default:
+		return fmt.Errorf("account type %q is not allowed; must be person or merchant", tx.Account.Type)
+	}
+	if tx.Account.Currency == "" {
+		return fmt.Errorf("currency is required")
+	}
+	if tx.Account.Balance != 0 {
+		return fmt.Errorf("new account balance must be 0")
+	}
+	if _, exists := state.Accounts[tx.Account.ID]; exists {
+		return fmt.Errorf("account %q already exists", tx.Account.ID)
+	}
+	if tx.PublicKey == "" {
+		return fmt.Errorf("public key is required")
+	}
+	if _, err := crypto.ParsePublicKey(tx.PublicKey); err != nil {
+		return fmt.Errorf("public key: %w", err)
+	}
+	if len(tx.Signature) == 0 {
+		return fmt.Errorf("account create signature is required")
+	}
+	signBytes, err := crypto.AccountCreateSignBytes(tx)
+	if err != nil {
+		return fmt.Errorf("canonical account create bytes: %w", err)
+	}
+	if !verifyAnyValidator(state, signBytes, tx.Signature) {
+		return fmt.Errorf("invalid account create signature")
+	}
+	return nil
+}
+
+func verifyAnyValidator(state *State, message, signature []byte) bool {
+	for _, pub := range state.ValidatorPubKeys {
+		if crypto.Verify(pub, message, signature) {
+			return true
+		}
+	}
+	return false
+}
+
+// ApplyAccountCreate mutates state with a validated account create transaction.
+func ApplyAccountCreate(tx domain.AccountCreateTransaction, state *State) error {
+	if err := ValidateAccountCreate(tx, state); err != nil {
+		return err
+	}
+	pub, err := crypto.ParsePublicKey(tx.PublicKey)
+	if err != nil {
+		return err
+	}
+	state.SetAccount(domain.Account{
+		ID:       tx.Account.ID,
+		Type:     tx.Account.Type,
+		Balance:  0,
+		Currency: tx.Account.Currency,
+	})
+	state.SetAccountPubKey(string(tx.Account.ID), pub)
+	return nil
+}
+
 func ValidateBlock(block domain.Block, prev domain.Block, state *State) (*State, error) {
 	if block.Height != prev.Height+1 {
 		return nil, fmt.Errorf("invalid block height: expected %d got %d", prev.Height+1, block.Height)
@@ -262,6 +331,11 @@ func ValidateBlock(block domain.Block, prev domain.Block, state *State) (*State,
 	}
 
 	nextState := state.Clone()
+	for _, create := range block.AccountCreates {
+		if err := ApplyAccountCreate(create, nextState); err != nil {
+			return nil, fmt.Errorf("account create %s: %w", create.ID, err)
+		}
+	}
 	for _, tx := range block.Transactions {
 		if err := ApplyTransaction(tx, nextState); err != nil {
 			return nil, fmt.Errorf("tx %s: %w", tx.ID, err)

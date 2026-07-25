@@ -134,6 +134,22 @@ func (t Taxes) Validate(allowedTaxAccounts []string) error {
 	return nil
 }
 
+func (k *Keystore) AppendEntry(entry KeystoreEntry) {
+	k.Entries = append(k.Entries, entry)
+}
+
+func SaveKeystore(path string, keystore Keystore) error {
+	data, err := json.MarshalIndent(keystore, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal keystore: %w", err)
+	}
+	data = append(data, '\n')
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		return fmt.Errorf("write keystore: %w", err)
+	}
+	return nil
+}
+
 func (k Keystore) PrivateKeyFor(accountID string) (string, bool) {
 	for _, entry := range k.Entries {
 		if entry.AccountID == accountID {

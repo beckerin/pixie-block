@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/beckerin/pixie-block/config"
@@ -15,21 +16,44 @@ type TxSubmitter interface {
 	SubmitTransaction(tx domain.PaymentTransaction) error
 }
 
-type Server struct {
-	chain            *chain.Blockchain
-	mempool          *mempool.Pool
-	keystore         config.Keystore
-	validatorPrivB64 string
-	submit           TxSubmitter
+type AccountCreateSubmitter interface {
+	SubmitAccountCreate(tx domain.AccountCreateTransaction) error
 }
 
-func NewServer(bc *chain.Blockchain, pool *mempool.Pool, keystore config.Keystore, validatorPrivB64 string, submitter TxSubmitter) *Server {
+type Server struct {
+	chain             *chain.Blockchain
+	mempool           *mempool.Pool
+	createPool        *mempool.AccountCreatePool
+	keystore          *config.Keystore
+	keystoreMu        sync.Mutex
+	keystorePath      string
+	validatorPrivB64  string
+	canCreateAccounts bool
+	submit            TxSubmitter
+	submitCreates     AccountCreateSubmitter
+}
+
+func NewServer(
+	bc *chain.Blockchain,
+	pool *mempool.Pool,
+	createPool *mempool.AccountCreatePool,
+	keystore *config.Keystore,
+	keystorePath string,
+	validatorPrivB64 string,
+	canCreateAccounts bool,
+	submitter TxSubmitter,
+	createSubmitter AccountCreateSubmitter,
+) *Server {
 	return &Server{
-		chain:            bc,
-		mempool:          pool,
-		keystore:         keystore,
-		validatorPrivB64: validatorPrivB64,
-		submit:           submitter,
+		chain:             bc,
+		mempool:           pool,
+		createPool:        createPool,
+		keystore:          keystore,
+		keystorePath:      keystorePath,
+		validatorPrivB64:  validatorPrivB64,
+		canCreateAccounts: canCreateAccounts,
+		submit:            submitter,
+		submitCreates:     createSubmitter,
 	}
 }
 
@@ -77,7 +101,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 }
 
 func (s *Server) ListenAndServe(ctx context.Context, addr string) error {
-	server := &http.Server{
+	server := http.Server{
 		Addr:    addr,
 		Handler: s.Handler(),
 	}

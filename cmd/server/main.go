@@ -31,6 +31,11 @@ func (s *submitAdapter) SubmitTransaction(tx domain.PaymentTransaction) error {
 	return nil
 }
 
+func (s *submitAdapter) SubmitAccountCreate(tx domain.AccountCreateTransaction) error {
+	s.bridge.BroadcastAccountCreate(tx)
+	return nil
+}
+
 func main() {
 
 	var (
@@ -81,6 +86,7 @@ func main() {
 	log.Printf("Chain initialized at height %d", bc.Height())
 
 	pool := mempool.New()
+	createPool := mempool.NewAccountCreatePool()
 
 	var (
 		producer            p2p.BlockProducer
@@ -106,7 +112,7 @@ func main() {
 		}
 	}
 
-	bridge := p2p.NewBridge(genesis.ChainID, *nodeID, bc, pool, producer, *p2pListen, peers)
+	bridge := p2p.NewBridge(genesis.ChainID, *nodeID, bc, pool, createPool, producer, *p2pListen, peers)
 	if err := bridge.Start(); err != nil {
 		log.Fatalf("start p2p: %v", err)
 	} else {
@@ -114,12 +120,13 @@ func main() {
 	}
 
 	adapter := &submitAdapter{bridge: bridge}
-	server := api.NewServer(bc, pool, keystore, validatorPrivForAPI, adapter)
+	canCreate := producer != nil
+	server := api.NewServer(bc, pool, createPool, &keystore, *keystorePath, validatorPrivForAPI, canCreate, adapter, adapter)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go runBlockProducer(ctx, genesis, pool, bridge, bc)
+	go runBlockProducer(ctx, genesis, pool, createPool, bridge, bc)
 
 	go func() {
 		log.Printf("API listening on %s", *apiAddr)
@@ -134,7 +141,7 @@ func main() {
 	cancel()
 }
 
-func runBlockProducer(ctx context.Context, genesis config.Genesis, pool *mempool.Pool, bridge *p2p.Bridge, bc *chain.Blockchain) {
+func runBlockProducer(ctx context.Context, genesis config.Genesis, pool *mempool.Pool, createPool *mempool.AccountCreatePool, bridge *p2p.Bridge, bc *chain.Blockchain) {
 	blockTime := time.Duration(genesis.BlockTimeSeconds) * time.Second
 	if blockTime <= 0 {
 		blockTime = time.Second
@@ -153,7 +160,7 @@ func runBlockProducer(ctx context.Context, genesis config.Genesis, pool *mempool
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			n := pool.Len()
+			n := pool.Len() + createPool.Len()
 			if n == 0 {
 				continue
 			}

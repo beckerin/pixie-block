@@ -14,20 +14,22 @@ import (
 )
 
 type Blockchain struct {
-	mu      sync.RWMutex
-	genesis config.Genesis
-	store   *bolt.Store
-	state   *ledger.State
-	blocks  []domain.Block
-	txIndex map[string]domain.PaymentTransaction
+	mu          sync.RWMutex
+	genesis     config.Genesis
+	store       *bolt.Store
+	state       *ledger.State
+	blocks      []domain.Block
+	txIndex     map[string]domain.PaymentTransaction
+	createIndex map[string]domain.AccountCreateTransaction
 }
 
 func New(genesis config.Genesis, store *bolt.Store, state *ledger.State, keystore config.Keystore) (*Blockchain, error) {
 	bc := &Blockchain{
-		genesis: genesis,
-		store:   store,
-		state:   state,
-		txIndex: make(map[string]domain.PaymentTransaction),
+		genesis:     genesis,
+		store:       store,
+		state:       state,
+		txIndex:     make(map[string]domain.PaymentTransaction),
+		createIndex: make(map[string]domain.AccountCreateTransaction),
 	}
 
 	if err := node.HydrateState(bc.state, genesis, keystore); err != nil {
@@ -59,6 +61,9 @@ func New(genesis config.Genesis, store *bolt.Store, state *ledger.State, keystor
 		for _, tx := range block.Transactions {
 			bc.txIndex[tx.ID] = tx
 		}
+		for _, create := range block.AccountCreates {
+			bc.createIndex[create.ID] = create
+		}
 	}
 
 	savedState, err := store.LoadState()
@@ -72,11 +77,29 @@ func New(genesis config.Genesis, store *bolt.Store, state *ledger.State, keystor
 		}
 	}
 
+	// Rehydrate pubkeys from on-chain account creates (followers may lack keystore entries).
+	if err := hydrateAccountCreatePubKeys(bc.state, existing); err != nil {
+		return nil, err
+	}
+
 	if err := bc.validateChain(keystore); err != nil {
 		return nil, err
 	}
 
 	return bc, nil
+}
+
+func hydrateAccountCreatePubKeys(state *ledger.State, blocks []domain.Block) error {
+	for _, block := range blocks {
+		for _, create := range block.AccountCreates {
+			pub, err := crypto.ParsePublicKey(create.PublicKey)
+			if err != nil {
+				return fmt.Errorf("account create %s pubkey: %w", create.ID, err)
+			}
+			state.SetAccountPubKey(string(create.Account.ID), pub)
+		}
+	}
+	return nil
 }
 
 func buildGenesisBlock(genesis config.Genesis) (domain.Block, error) {
@@ -200,6 +223,13 @@ func (bc *Blockchain) GetTransaction(id string) (domain.PaymentTransaction, bool
 	return tx, ok
 }
 
+func (bc *Blockchain) GetAccountCreate(id string) (domain.AccountCreateTransaction, bool) {
+	bc.mu.RLock()
+	defer bc.mu.RUnlock()
+	tx, ok := bc.createIndex[id]
+	return tx, ok
+}
+
 func (bc *Blockchain) State() *ledger.State {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
@@ -215,9 +245,14 @@ func (bc *Blockchain) ChainInfo() domain.ChainInfo {
 		validators[i] = v.ID
 	}
 
+	height := int64(-1)
+	if len(bc.blocks) > 0 {
+		height = bc.blocks[len(bc.blocks)-1].Height
+	}
+
 	return domain.ChainInfo{
 		ChainID:    bc.genesis.ChainID,
-		Height:     bc.Height(),
+		Height:     height,
 		Validators: validators,
 	}
 }
@@ -238,6 +273,12 @@ func (bc *Blockchain) ValidateAdmit(tx domain.PaymentTransaction, reservedGross 
 		state.Accounts[tx.Payer.ID] = acct
 	}
 	return ledger.ValidateTransaction(tx, state)
+}
+
+func (bc *Blockchain) ValidateAccountCreate(tx domain.AccountCreateTransaction) error {
+	bc.mu.RLock()
+	defer bc.mu.RUnlock()
+	return ledger.ValidateAccountCreate(tx, bc.state.Clone())
 }
 
 // ValidatePendingWith checks tx against confirmed state after applying pending spends in order.
@@ -273,6 +314,9 @@ func (bc *Blockchain) AppendBlock(block domain.Block) error {
 	bc.state = nextState
 	for _, tx := range block.Transactions {
 		bc.txIndex[tx.ID] = tx
+	}
+	for _, create := range block.AccountCreates {
+		bc.createIndex[create.ID] = create
 	}
 
 	return nil

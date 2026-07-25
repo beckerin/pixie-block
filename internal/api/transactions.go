@@ -85,7 +85,9 @@ func (s *Server) buildTransaction(req submitTxRequest) (domain.PaymentTransactio
 		return domain.PaymentTransaction{}, fmt.Errorf("tax validation failed")
 	}
 
+	s.keystoreMu.Lock()
 	privB64, ok := s.keystore.PrivateKeyFor(req.Payer)
+	s.keystoreMu.Unlock()
 	if !ok {
 		return domain.PaymentTransaction{}, fmt.Errorf("no signing key for payer %q", req.Payer)
 	}

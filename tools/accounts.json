@@ -3,49 +3,49 @@
     {
       "id": "federal_treasury",
       "type": "treasury",
-      "balance": 47828162,
+      "balance": 10000,
       "currency": "BRL"
     },
     {
       "id": "sao_paulo_treasury",
       "type": "treasury",
-      "balance": 3670537,
+      "balance": 10000,
       "currency": "BRL"
     },
     {
       "id": "person_001",
       "type": "person",
-      "balance": 2449,
+      "balance": 10000,
       "currency": "BRL"
     },
     {
       "id": "person_002",
       "type": "person",
-      "balance": 111741,
+      "balance": 10000,
       "currency": "BRL"
     },
     {
       "id": "person_003",
       "type": "person",
-      "balance": 176539,
+      "balance": 10000,
       "currency": "BRL"
     },
     {
       "id": "person_004",
       "type": "person",
-      "balance": 168564,
+      "balance": 10000,
       "currency": "BRL"
     },
     {
       "id": "merchant_001",
       "type": "merchant",
-      "balance": 476539,
+      "balance": 10000,
       "currency": "BRL"
     },
     {
       "id": "merchant_002",
       "type": "merchant",
-      "balance": 376539,
+      "balance": 10000,
       "currency": "BRL"
     }
   ]

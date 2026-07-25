@@ -32,13 +32,14 @@ type PublicTx struct {
 
 // PublicBlock is a block whose transactions may be redacted per-viewer.
 type PublicBlock struct {
-	Height       int64     `json:"height"`
-	Timestamp    time.Time `json:"timestamp"`
-	Transactions []any     `json:"transactions"`
-	PreviousHash []byte    `json:"previous_hash"`
-	Hash         []byte    `json:"hash"`
-	Validator    string    `json:"validator"`
-	Signature    []byte    `json:"signature,omitempty"`
+	Height         int64                             `json:"height"`
+	Timestamp      time.Time                         `json:"timestamp"`
+	Transactions   []any                             `json:"transactions"`
+	AccountCreates []domain.AccountCreateTransaction `json:"account_creates,omitempty"`
+	PreviousHash   []byte                            `json:"previous_hash"`
+	Hash           []byte                            `json:"hash"`
+	Validator      string                            `json:"validator"`
+	Signature      []byte                            `json:"signature,omitempty"`
 }
 
 // ResolveViewer maps a private key query value to an account viewer or validator auditor.
@@ -83,13 +84,14 @@ func PresentBlock(block domain.Block, viewer Viewer, pubKeyB64 func(domain.Accou
 		txs[i] = PresentTx(tx, viewer, pubKeyB64)
 	}
 	return PublicBlock{
-		Height:       block.Height,
-		Timestamp:    block.Timestamp,
-		Transactions: txs,
-		PreviousHash: block.PreviousHash,
-		Hash:         block.Hash,
-		Validator:    block.Validator,
-		Signature:    block.Signature,
+		Height:         block.Height,
+		Timestamp:      block.Timestamp,
+		Transactions:   txs,
+		AccountCreates: block.AccountCreates,
+		PreviousHash:   block.PreviousHash,
+		Hash:           block.Hash,
+		Validator:      block.Validator,
+		Signature:      block.Signature,
 	}
 }
 
@@ -104,7 +106,10 @@ func opaqueTokenBytes(b []byte) string {
 }
 
 func (s *Server) resolveViewerPKey(pkey string) Viewer {
-	return ResolveViewer(s.keystore, s.validatorPrivB64, pkey)
+	s.keystoreMu.Lock()
+	ks := *s.keystore
+	s.keystoreMu.Unlock()
+	return ResolveViewer(ks, s.validatorPrivB64, pkey)
 }
 
 func (s *Server) viewerFromRequest(r *http.Request) Viewer {
@@ -127,7 +132,10 @@ func (s *Server) accountPubKeyB64(id domain.AccountID) string {
 	if pub, ok := s.chain.State().AccountPubKey(string(id)); ok {
 		return crypto.PublicKeyBase64(pub)
 	}
-	if privB64, ok := s.keystore.PrivateKeyFor(string(id)); ok {
+	s.keystoreMu.Lock()
+	privB64, ok := s.keystore.PrivateKeyFor(string(id))
+	s.keystoreMu.Unlock()
+	if ok {
 		priv, err := crypto.ParsePrivateKey(privB64)
 		if err == nil {
 			return crypto.PublicKeyBase64(priv.Public().(ed25519.PublicKey))
