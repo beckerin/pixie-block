@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pixie Block</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <script src="https://unpkg.com/htmx-ext-sse@2.2.2"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4/dist/ext/json-enc.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Syne', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'ui-monospace', 'monospace'],
+          },
+          colors: {
+            ink: '#1a2332',
+            mist: '#e8eef4',
+            foam: '#f4f7fa',
+            tide: '#0d7377',
+            tideDark: '#095456',
+            ember: '#c45c26',
+          },
+        },
+      },
+    };
+
+    function onTxResult(el, evt) {
+      if (evt.detail.successful) {
+        try {
+          const tx = JSON.parse(evt.detail.xhr.responseText);
+          el.textContent = 'tx ' + tx.id.slice(0, 12) + '… enviada';
+          el.className = 'mt-3 font-mono text-sm text-tide';
+        } catch {
+          el.textContent = 'transação enviada';
+          el.className = 'mt-3 font-mono text-sm text-tide';
+        }
+      } else {
+        try {
+          const err = JSON.parse(evt.detail.xhr.responseText);
+          el.textContent = err.error || 'falha ao criar transação';
+        } catch {
+          el.textContent = 'falha ao criar transação';
+        }
+        el.className = 'mt-3 font-mono text-sm text-ember';
+      }
+    }
+  </script>
+  <style>
+    body {
+      background:
+        radial-gradient(ellipse 80% 50% at 10% -10%, rgba(13, 115, 119, 0.12), transparent),
+        radial-gradient(ellipse 60% 40% at 90% 0%, rgba(196, 92, 38, 0.08), transparent),
+        linear-gradient(180deg, #f4f7fa 0%, #e8eef4 100%);
+      min-height: 100vh;
+    }
+    .panel {
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(26, 35, 50, 0.08);
+    }
+    pre.json-view {
+      max-height: 22rem;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body class="text-ink antialiased" hx-ext="json-enc,sse" sse-connect="/v1/chain">
+  <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <header class="mb-10">
+      <p class="font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
+        Pixie Block
+      </p>
+      <p class="mt-2 max-w-xl text-base text-ink/60">
+        Explorer da chain — bloco anterior, bloco atual e saldos das contas.
+      </p>
+      <div
+        id="chain-info"
+        class="mt-4 inline-flex items-center gap-2 rounded-full border border-ink/10 bg-white/60 px-3 py-1 font-mono text-xs text-ink/70"
+      >
+        <span sse-swap="ChainInfo" class="inline-flex items-center gap-2">
+          <span class="h-1.5 w-1.5 rounded-full bg-tide"></span>
+          <span data-chain>carregando…</span>
+        </span>
+      </div>
+    </header>
+
+    <section class="mb-8 grid gap-4 md:grid-cols-2">
+      <article class="panel rounded-2xl p-5">
+        <h2 class="font-display text-lg font-bold text-ink/80">Bloco anterior</h2>
+        <pre
+          id="previous-block"
+          class="json-view mt-3 font-mono text-xs leading-relaxed text-ink/80"
+          sse-swap="PreviousBlock"
+        >carregando…</pre>
+      </article>
+
+      <article class="panel rounded-2xl p-5 ring-1 ring-tide/20">
+        <div class="flex items-center justify-between gap-2">
+          <h2 class="font-display text-lg font-bold text-tide">Bloco atual</h2>
+          <span class="font-mono text-[10px] uppercase tracking-wider text-tide/70">latest</span>
+        </div>
+        <pre
+          id="current-block"
+          class="json-view mt-3 font-mono text-xs leading-relaxed text-ink/80"
+          sse-swap="LatestBlock"
+        >carregando…</pre>
+      </article>
+    </section>
+
+    <section class="panel mb-10 rounded-2xl p-5">
+      <h2 class="font-display text-lg font-bold text-ink/80">Nova transação</h2>
+      <p class="mt-1 text-sm text-ink/50">
+        Envia um pagamento demo: person_001 → merchant_001 (R$ 10,00 + CBS/IBS).
+      </p>
+      <button
+        type="button"
+        class="mt-4 rounded-lg bg-tide px-5 py-2.5 font-display text-sm font-bold text-white transition hover:bg-tideDark active:scale-[0.98] disabled:opacity-50"
+        hx-post="/v1/transactions"
+        hx-headers='{"Content-Type": "application/json"}'
+        hx-vals='{"payer":"person_001","payee":"merchant_001","currency":"BRL","items":[{"description":"Pagamento demo","amount":1000,"tax_codes":["CBS","IBS"]}]}'
+        hx-swap="none"
+        hx-disabled-elt="this"
+        hx-on::after-request="onTxResult(document.getElementById('tx-status'), event)"
+      >
+        Criar transação
+      </button>
+      <p id="tx-status" class="mt-3 font-mono text-sm text-ink/40"></p>
+    </section>
+
+    <section class="panel rounded-2xl p-5">
+      <h2 class="font-display text-lg font-bold text-ink/80">Contas</h2>
+      <div
+        id="accounts"
+        class="mt-2"
+        sse-swap="Accounts"
+      >
+        <p class="font-mono text-sm text-ink/40">carregando…</p>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

@@ -19,14 +19,14 @@ prepare: genkeys build
 run: build
 	./main \
 		--data-dir ./data/node1 \
-		--api-addr :8080 \
+		--api-addr :80 \
 		--p2p-listen :9000 \
 		--node-id node-1
 
 run-node2: build
 	./main \
 		--data-dir ./data/node2 \
-		--api-addr :8081 \
+		--api-addr :81 \
 		--p2p-listen :9001 \
 		--node-id node-2 \
 		--peer 127.0.0.1:9000
