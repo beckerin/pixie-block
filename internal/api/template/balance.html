@@ -1,0 +1,25 @@
+{{if .Audit}}
+<section class="panel rounded-2xl p-5">
+  <div class="space-y-1">
+    <p class="font-mono text-[10px] uppercase tracking-wider text-ink/40">saldos (audit)</p>
+    {{range .Accounts}}
+    <div class="flex items-baseline justify-between gap-4 border-b border-ink/10 py-2 last:border-0">
+      <span class="font-mono text-sm text-ink">{{.ID}} <span class="text-ink/40">{{.Type}}</span></span>
+      <span class="font-mono text-sm font-medium text-tide">{{money .Balance}}</span>
+    </div>
+    {{else}}
+    <p class="font-mono text-sm text-ink/40">nenhuma conta</p>
+    {{end}}
+  </div>
+</section>
+{{else if .Account}}
+<section class="panel rounded-2xl p-5">
+  <div class="flex items-baseline justify-between gap-4">
+    <div>
+      <p class="font-mono text-[10px] uppercase tracking-wider text-ink/40">seu saldo</p>
+      <p class="mt-1 font-mono text-sm text-ink">{{.Account.ID}} <span class="text-ink/40">{{.Account.Type}}</span></p>
+    </div>
+    <span class="font-display text-2xl font-bold text-tide">{{money .Account.Balance}}</span>
+  </div>
+</section>
+{{end}}

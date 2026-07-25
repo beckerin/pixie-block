@@ -35,7 +35,6 @@ func TestLoadGenesisDefaultsMaxTxsPerBlock(t *testing.T) {
 	path := dir + "/genesis.json"
 	raw := `{
 		"chain_id": "test",
-		"tax_treasury": "t",
 		"block_time_seconds": 1,
 		"validators": [],
 		"accounts": []

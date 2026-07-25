@@ -7,6 +7,7 @@ type Block struct {
 	Timestamp      time.Time                  `json:"timestamp"`
 	Transactions   []PaymentTransaction       `json:"transactions"`
 	AccountCreates []AccountCreateTransaction `json:"account_creates,omitempty"`
+	AccountCloses  []AccountCloseTransaction  `json:"account_closes,omitempty"`
 	PreviousHash   []byte                     `json:"previous_hash"`
 	Hash           []byte                     `json:"hash"`
 	Validator      string                     `json:"validator"`

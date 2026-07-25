@@ -27,7 +27,7 @@ func TestCloneDoesNotShareTaxSplitMap(t *testing.T) {
 	state := newTestState(t)
 	clone := state.Clone()
 
-	clone.TaxSplit["ICMS"] = domain.TaxSplit{RateBPS: 1, TaxAccount: "tax_treasury"}
+	clone.TaxSplit["ICMS"] = domain.TaxSplit{RateBPS: 1, TaxAccount: "federal_treasury"}
 	if state.TaxSplit["ICMS"].RateBPS == 1 {
 		t.Fatal("Clone shared TaxSplit map with parent")
 	}
@@ -43,7 +43,7 @@ func TestApplyTransactionWithTaxAndDiscount(t *testing.T) {
 		Payee:     domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0},
 		Items: []domain.LineItem{{Description: "Serviço", Amount: 100000,
 			TaxCodes:  []domain.TaxCode{"ICMS"},
-			Discounts: []domain.Discount{{Code: "PIS_CREDIT", Amount: 1650, TaxAccount: "tax_treasury"}}}},
+			Discounts: []domain.Discount{{Code: "PIS_CREDIT", Amount: 1650, TaxAccount: "federal_treasury"}}}},
 	})
 
 	if err := ledger.ApplyTransaction(tx, state); err != nil {
@@ -52,7 +52,7 @@ func TestApplyTransactionWithTaxAndDiscount(t *testing.T) {
 
 	assertBalance(t, state, "merchant_001", 900000)
 	assertBalance(t, state, "supplier_042", 88350)
-	assertBalance(t, state, "tax_treasury", 11650)
+	assertBalance(t, state, "federal_treasury", 11650)
 }
 
 func TestApplyAccountCreate(t *testing.T) {
@@ -190,7 +190,7 @@ func TestRejectNegativeNetToPayee(t *testing.T) {
 		Payee:     domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0},
 		Items: []domain.LineItem{{Description: "Serviço", Amount: 10000,
 			TaxCodes:  []domain.TaxCode{"ICMS"},
-			Discounts: []domain.Discount{{Code: "PIS", Amount: 9500, TaxAccount: "tax_treasury"}}}},
+			Discounts: []domain.Discount{{Code: "PIS", Amount: 9500, TaxAccount: "federal_treasury"}}}},
 	})
 
 	if err := ledger.ApplyTransaction(tx, state); err == nil {
@@ -236,17 +236,16 @@ func TestRejectInsufficientBalance(t *testing.T) {
 func newTestState(t *testing.T) *ledger.State {
 	t.Helper()
 
-	state := ledger.NewState("tax_treasury", []domain.AccountID{"tax_treasury"}, config.Taxes{
+	state := ledger.NewState([]domain.AccountID{"federal_treasury"}, config.Taxes{
 		TaxSplit: map[domain.TaxCode]domain.TaxSplit{
 			"ICMS": {
 				RateBPS:    1000,
-				TaxAccount: "tax_treasury",
+				TaxAccount: "federal_treasury",
 			},
 		},
 	})
-	state.SetBalance("tax_treasury", 0)
-	state.SetBalance("merchant_001", 1000000)
-	state.SetBalance("supplier_042", 0)
+	state.SetAccount(domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 1000000})
+	state.SetAccount(domain.Account{ID: "supplier_042", Type: domain.AccountTypePerson, Balance: 0})
 	state.SetAccountPubKey("merchant_001", merchantPub)
 	state.AddValidator("validator-1", validatorPub)
 	return state
@@ -268,6 +267,16 @@ func signAccountCreate(t *testing.T, _ *ledger.State, tx domain.AccountCreateTra
 	return tx
 }
 
+func signAccountClose(t *testing.T, priv ed25519.PrivateKey, tx domain.AccountCloseTransaction) domain.AccountCloseTransaction {
+	t.Helper()
+	signBytes, err := crypto.AccountCloseSignBytes(tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tx.Signature = crypto.Sign(priv, signBytes)
+	return tx
+}
+
 func assertBalance(t *testing.T, state *ledger.State, id string, want int64) {
 	t.Helper()
 	got, ok := state.Balance(domain.AccountID(id))
@@ -276,5 +285,90 @@ func assertBalance(t *testing.T, state *ledger.State, id string, want int64) {
 	}
 	if got != want {
 		t.Fatalf("account %s balance: got %d want %d", id, got, want)
+	}
+}
+
+func TestApplyAccountClosePersonWithDestination(t *testing.T) {
+	state := newTestState(t)
+	personPub, _, _ := ed25519.GenerateKey(nil)
+	state.SetAccount(domain.Account{ID: "person_die", Type: domain.AccountTypePerson, Balance: 5000})
+	state.SetAccount(domain.Account{ID: "person_heir", Type: domain.AccountTypePerson, Balance: 100})
+	state.SetAccountPubKey("person_die", personPub)
+
+	closeTx := signAccountClose(t, validatorPriv, domain.AccountCloseTransaction{
+		ID:          "close-1",
+		Timestamp:   time.Now().UTC(),
+		AccountID:   "person_die",
+		PublicKey:   crypto.PublicKeyBase64(personPub),
+		Destination: "person_heir",
+	})
+	if err := ledger.ApplyAccountClose(closeTx, state); err != nil {
+		t.Fatalf("apply close: %v", err)
+	}
+	if _, ok := state.Accounts["person_die"]; ok {
+		t.Fatal("closed account should be removed")
+	}
+	assertBalance(t, state, "person_heir", 5100)
+}
+
+func TestApplyAccountClosePersonDefaultTreasury(t *testing.T) {
+	state := newTestState(t)
+	personPub, _, _ := ed25519.GenerateKey(nil)
+	state.SetAccount(domain.Account{ID: "person_die", Type: domain.AccountTypePerson, Balance: 2500})
+	state.SetAccountPubKey("person_die", personPub)
+
+	closeTx := signAccountClose(t, validatorPriv, domain.AccountCloseTransaction{
+		ID:        "close-2",
+		Timestamp: time.Now().UTC(),
+		AccountID: "person_die",
+		PublicKey: crypto.PublicKeyBase64(personPub),
+	})
+	if err := ledger.ApplyAccountClose(closeTx, state); err != nil {
+		t.Fatalf("apply close: %v", err)
+	}
+	assertBalance(t, state, "federal_treasury", 2500)
+}
+
+func TestRejectMerchantCloseWithBalance(t *testing.T) {
+	state := newTestState(t)
+	closeTx := signAccountClose(t, merchantPriv, domain.AccountCloseTransaction{
+		ID:        "close-m-bal",
+		Timestamp: time.Now().UTC(),
+		AccountID: "merchant_001",
+		PublicKey: crypto.PublicKeyBase64(merchantPub),
+	})
+	if err := ledger.ApplyAccountClose(closeTx, state); err == nil {
+		t.Fatal("expected balance error")
+	}
+}
+
+func TestApplyAccountCloseMerchantZeroBalance(t *testing.T) {
+	state := newTestState(t)
+	state.SetAccount(domain.Account{ID: "merchant_001", Type: domain.AccountTypeMerchant, Balance: 0})
+
+	closeTx := signAccountClose(t, merchantPriv, domain.AccountCloseTransaction{
+		ID:        "close-m-ok",
+		Timestamp: time.Now().UTC(),
+		AccountID: "merchant_001",
+		PublicKey: crypto.PublicKeyBase64(merchantPub),
+	})
+	if err := ledger.ApplyAccountClose(closeTx, state); err != nil {
+		t.Fatalf("apply close: %v", err)
+	}
+	if _, ok := state.Accounts["merchant_001"]; ok {
+		t.Fatal("merchant should be removed")
+	}
+}
+
+func TestRejectTreasuryClose(t *testing.T) {
+	state := newTestState(t)
+	closeTx := signAccountClose(t, validatorPriv, domain.AccountCloseTransaction{
+		ID:        "close-t",
+		Timestamp: time.Now().UTC(),
+		AccountID: "federal_treasury",
+		PublicKey: crypto.PublicKeyBase64(merchantPub),
+	})
+	if err := ledger.ApplyAccountClose(closeTx, state); err == nil {
+		t.Fatal("expected treasury rejection")
 	}
 }

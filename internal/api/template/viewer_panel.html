@@ -1,0 +1,123 @@
+<section class="panel mb-8 rounded-2xl p-5" id="viewer-actions">
+  <h2 class="font-display text-lg font-bold text-ink/80">Ações</h2>
+  {{if .Audit}}
+  <p class="mt-1 text-sm text-ink/50">Validador — acesso total.</p>
+  {{else}}
+  <p class="mt-1 text-sm text-ink/50">Conta <span class="font-mono text-ink">{{.AccountID}}</span> ({{.AccountType}}).</p>
+  {{end}}
+
+  <div class="mt-6 grid gap-8 lg:grid-cols-2">
+    {{if .Audit}}
+    <div>
+      <h3 class="font-display text-sm font-bold text-ink/70">Criar conta</h3>
+      <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
+        <label class="block min-w-[8rem] flex-1">
+          <span class="font-mono text-[10px] uppercase tracking-wider text-ink/40">id</span>
+          <input id="create-id" type="text" autocomplete="off" placeholder="person_005"
+            class="mt-1 w-full rounded-lg border border-ink/10 bg-white/80 px-3 py-2 font-mono text-sm outline-none focus:border-tide" />
+        </label>
+        <label class="block">
+          <span class="font-mono text-[10px] uppercase tracking-wider text-ink/40">type</span>
+          <select id="create-type"
+            class="mt-1 w-full rounded-lg border border-ink/10 bg-white/80 px-3 py-2 font-mono text-sm outline-none focus:border-tide">
+            <option value="person">person</option>
+            <option value="merchant">merchant</option>
+          </select>
+        </label>
+        <button type="button" id="btn-create-account"
+          class="rounded-lg bg-tide px-4 py-2 font-display text-sm font-bold text-white transition hover:bg-tideDark active:scale-[0.98]"
+          hx-ext="json-body"
+          hx-post="/v1/accounts"
+          hx-json="{}"
+          hx-swap="none"
+          hx-disabled-elt="this"
+          onclick="prepareCreateAccount(this)"
+          hx-on::after-request="onAccountCreateResult(document.getElementById('create-status'), event)">
+          Criar
+        </button>
+      </div>
+      <p id="create-status" class="mt-2 font-mono text-xs text-ink/40"></p>
+    </div>
+    {{end}}
+
+    <div>
+      <h3 class="font-display text-sm font-bold text-ink/70">Nova transação</h3>
+      <div class="mt-3 flex flex-col gap-2">
+        <label class="block">
+          <span class="font-mono text-[10px] uppercase tracking-wider text-ink/40">payer</span>
+          <input id="tx-payer" type="text" autocomplete="off"
+            value="{{if not .Audit}}{{.AccountID}}{{else}}person_001{{end}}"
+            {{if not .Audit}}readonly{{end}}
+            class="mt-1 w-full rounded-lg border border-ink/10 bg-white/80 px-3 py-2 font-mono text-sm outline-none focus:border-tide {{if not .Audit}}opacity-70{{end}}" />
+        </label>
+        <label class="block">
+          <span class="font-mono text-[10px] uppercase tracking-wider text-ink/40">payee</span>
+          <input id="tx-payee" type="text" autocomplete="off" placeholder="merchant_001"
+            class="mt-1 w-full rounded-lg border border-ink/10 bg-white/80 px-3 py-2 font-mono text-sm outline-none focus:border-tide" />
+        </label>
+        <label class="block">
+          <span class="font-mono text-[10px] uppercase tracking-wider text-ink/40">amount (centavos)</span>
+          <input id="tx-amount" type="number" min="1" value="1000"
+            class="mt-1 w-full rounded-lg border border-ink/10 bg-white/80 px-3 py-2 font-mono text-sm outline-none focus:border-tide" />
+        </label>
+        <button type="button" id="btn-create-tx"
+          class="mt-1 self-start rounded-lg bg-tide px-4 py-2 font-display text-sm font-bold text-white transition hover:bg-tideDark active:scale-[0.98]"
+          hx-ext="json-body"
+          hx-post="/v1/transactions"
+          hx-json="{}"
+          hx-swap="none"
+          hx-disabled-elt="this"
+          onclick="prepareCreateTx(this)"
+          hx-on::after-request="onTxResult(document.getElementById('tx-status'), event)">
+          Enviar
+        </button>
+      </div>
+      <p id="tx-status" class="mt-2 font-mono text-xs text-ink/40"></p>
+    </div>
+
+    {{if or .Audit (eq .AccountType "merchant")}}
+    <div>
+      <h3 class="font-display text-sm font-bold text-ink/70">Encerrar conta</h3>
+      <div class="mt-3 flex flex-col gap-2">
+        <label class="block">
+          <span class="font-mono text-[10px] uppercase tracking-wider text-ink/40">id</span>
+          <input id="close-id" type="text" autocomplete="off"
+            value="{{if not .Audit}}{{.AccountID}}{{end}}"
+            {{if not .Audit}}readonly{{end}}
+            placeholder="merchant_001"
+            class="mt-1 w-full rounded-lg border border-ink/10 bg-white/80 px-3 py-2 font-mono text-sm outline-none focus:border-tide {{if not .Audit}}opacity-70{{end}}" />
+        </label>
+        {{if .Audit}}
+        <label class="block">
+          <span class="font-mono text-[10px] uppercase tracking-wider text-ink/40">type</span>
+          <select id="close-type" onchange="toggleCloseDestination()"
+            class="mt-1 w-full rounded-lg border border-ink/10 bg-white/80 px-3 py-2 font-mono text-sm outline-none focus:border-tide">
+            <option value="person">person</option>
+            <option value="merchant">merchant</option>
+          </select>
+        </label>
+        <label id="close-dest-wrap" class="block">
+          <span class="font-mono text-[10px] uppercase tracking-wider text-ink/40">destination (person, opcional)</span>
+          <input id="close-destination" type="text" autocomplete="off" placeholder="person_002 ou vazio → treasury"
+            class="mt-1 w-full rounded-lg border border-ink/10 bg-white/80 px-3 py-2 font-mono text-sm outline-none focus:border-tide" />
+        </label>
+        {{else}}
+        <input type="hidden" id="close-type" value="merchant" />
+        {{end}}
+        <button type="button" id="btn-close-account"
+          class="mt-1 self-start rounded-lg border border-ember/40 bg-ember/10 px-4 py-2 font-display text-sm font-bold text-ember transition hover:bg-ember/20"
+          hx-ext="json-body"
+          hx-delete="/v1/accounts/"
+          hx-json="{}"
+          hx-swap="none"
+          hx-disabled-elt="this"
+          onclick="prepareCloseAccount(this)"
+          hx-on::after-request="onCloseResult(document.getElementById('close-status'), event)">
+          Encerrar
+        </button>
+      </div>
+      <p id="close-status" class="mt-2 font-mono text-xs text-ink/40"></p>
+    </div>
+    {{end}}
+  </div>
+</section>

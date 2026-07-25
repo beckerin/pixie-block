@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/beckerin/pixie-block/internal/domain"
 )
@@ -38,10 +39,6 @@ func main() {
 	for _, acct := range accounts {
 		if isTaxAccount(acct) {
 			allowedTax = append(allowedTax, acct.ID)
-			continue
-		}
-		if !needsKeystoreEntry(acct) {
-			continue
 		}
 		_, priv, err := ed25519.GenerateKey(nil)
 		if err != nil {
@@ -55,10 +52,9 @@ func main() {
 
 	genesis := map[string]any{
 		"chain_id":             "pixie-net-1",
-		"genesis_time":         "1970-01-01T00:00:00Z",
-		"block_time_seconds":   1,
+		"genesis_time":         time.Now().UTC().Format(time.RFC3339),
+		"block_time_seconds":   5,
 		"max_txs_per_block":    1000,
-		"tax_treasury":         "federal_treasury",
 		"allowed_tax_accounts": allowedTax,
 		"validators": []map[string]string{
 			{"id": "validator-1", "public_key": enc(vPub)},

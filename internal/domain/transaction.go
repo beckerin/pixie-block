@@ -42,6 +42,18 @@ type AccountCreateTransaction struct {
 	Signature []byte    `json:"signature,omitempty"`
 }
 
+// AccountCloseTransaction hard-deletes a person/merchant account on-chain.
+// Person: validator-signed; residual balance goes to Destination (or tax treasury).
+// Merchant: account-signed; balance must be 0.
+type AccountCloseTransaction struct {
+	ID          string    `json:"id"`
+	Timestamp   time.Time `json:"timestamp"`
+	AccountID   AccountID `json:"account_id"`
+	PublicKey   string    `json:"public_key"`
+	Destination AccountID `json:"destination,omitempty"`
+	Signature   []byte    `json:"signature,omitempty"`
+}
+
 func (tx *PaymentTransaction) GrossAmount() int64 {
 	var total int64
 	for _, item := range tx.Items {

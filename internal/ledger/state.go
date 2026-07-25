@@ -12,13 +12,12 @@ import (
 type State struct {
 	Accounts         map[domain.AccountID]domain.Account
 	TaxSplit         map[domain.TaxCode]domain.TaxSplit
-	TaxTreasury      domain.AccountID
 	AllowedTaxAccts  map[domain.AccountID]struct{}
 	ValidatorPubKeys map[string]ed25519.PublicKey
 	accountPubKeys   map[string]ed25519.PublicKey
 }
 
-func NewState(taxTreasury domain.AccountID, allowedTax []domain.AccountID, taxes config.Taxes) *State {
+func NewState(allowedTax []domain.AccountID, taxes config.Taxes) *State {
 	allowed := make(map[domain.AccountID]struct{}, len(allowedTax))
 	for _, id := range allowedTax {
 		allowed[id] = struct{}{}
@@ -30,7 +29,6 @@ func NewState(taxTreasury domain.AccountID, allowedTax []domain.AccountID, taxes
 	return &State{
 		Accounts:         make(map[domain.AccountID]domain.Account),
 		TaxSplit:         taxSplit,
-		TaxTreasury:      taxTreasury,
 		AllowedTaxAccts:  allowed,
 		ValidatorPubKeys: make(map[string]ed25519.PublicKey),
 		accountPubKeys:   make(map[string]ed25519.PublicKey),
@@ -38,7 +36,7 @@ func NewState(taxTreasury domain.AccountID, allowedTax []domain.AccountID, taxes
 }
 
 func (s *State) Clone() *State {
-	clone := NewState(s.TaxTreasury, nil, config.Taxes{TaxSplit: s.TaxSplit})
+	clone := NewState(nil, config.Taxes{TaxSplit: s.TaxSplit})
 	for id := range s.AllowedTaxAccts {
 		clone.AllowedTaxAccts[id] = struct{}{}
 	}
@@ -178,6 +176,13 @@ func (s *State) SetAccountPubKey(accountID string, pub ed25519.PublicKey) {
 	s.accountPubKeys[accountID] = pub
 }
 
+func (s *State) RemoveAccountPubKey(accountID string) {
+	if s.accountPubKeys == nil {
+		return
+	}
+	delete(s.accountPubKeys, accountID)
+}
+
 // ApplyTransaction mutates state with a validated transaction.
 func ApplyTransaction(tx domain.PaymentTransaction, state *State) error {
 	if err := ValidateTransaction(tx, state); err != nil {
@@ -285,6 +290,100 @@ func ApplyAccountCreate(tx domain.AccountCreateTransaction, state *State) error 
 	return nil
 }
 
+func ResolveCloseDestination(tx domain.AccountCloseTransaction, state *State) domain.AccountID {
+	if tx.Destination != "" {
+		return tx.Destination
+	}
+	return "federal_treasury"
+}
+
+func ValidateAccountClose(tx domain.AccountCloseTransaction, state *State) error {
+	if tx.ID == "" {
+		return fmt.Errorf("account close id is required")
+	}
+	if tx.AccountID == "" {
+		return fmt.Errorf("account id is required")
+	}
+	acct, ok := state.Accounts[tx.AccountID]
+	if !ok {
+		return fmt.Errorf("account %q not found", tx.AccountID)
+	}
+	switch acct.Type {
+	case domain.AccountTypePerson, domain.AccountTypeMerchant:
+		// ok
+	default:
+		return fmt.Errorf("account type %q cannot be closed", acct.Type)
+	}
+	if tx.PublicKey == "" {
+		return fmt.Errorf("public key is required")
+	}
+	pubFromTx, err := crypto.ParsePublicKey(tx.PublicKey)
+	if err != nil {
+		return fmt.Errorf("public key: %w", err)
+	}
+	acctPub, ok := state.AccountPubKey(string(tx.AccountID))
+	if !ok {
+		return fmt.Errorf("account public key not found for %q", tx.AccountID)
+	}
+	if string(pubFromTx) != string(acctPub) {
+		return fmt.Errorf("public key does not match account %q", tx.AccountID)
+	}
+
+	if acct.Type == domain.AccountTypeMerchant {
+		if acct.Balance != 0 {
+			return fmt.Errorf("merchant account %q balance must be 0 to close (have %d)", tx.AccountID, acct.Balance)
+		}
+		if tx.Destination != "" {
+			return fmt.Errorf("merchant close cannot specify destination")
+		}
+	} else {
+		dest := ResolveCloseDestination(tx, state)
+		if dest == tx.AccountID {
+			return fmt.Errorf("destination cannot be the account being closed")
+		}
+		if _, ok := state.Accounts[dest]; !ok {
+			return fmt.Errorf("destination account %q not found", dest)
+		}
+	}
+
+	if len(tx.Signature) == 0 {
+		return fmt.Errorf("account close signature is required")
+	}
+	signBytes, err := crypto.AccountCloseSignBytes(tx)
+	if err != nil {
+		return fmt.Errorf("canonical account close bytes: %w", err)
+	}
+
+	switch acct.Type {
+	case domain.AccountTypePerson:
+		if !verifyAnyValidator(state, signBytes, tx.Signature) {
+			return fmt.Errorf("invalid account close signature")
+		}
+	case domain.AccountTypeMerchant:
+		if !crypto.Verify(acctPub, signBytes, tx.Signature) {
+			return fmt.Errorf("invalid account close signature")
+		}
+	}
+	return nil
+}
+
+// ApplyAccountClose mutates state with a validated account close transaction.
+func ApplyAccountClose(tx domain.AccountCloseTransaction, state *State) error {
+	if err := ValidateAccountClose(tx, state); err != nil {
+		return err
+	}
+	acct := state.Accounts[tx.AccountID]
+	if acct.Type == domain.AccountTypePerson && acct.Balance > 0 {
+		dest := ResolveCloseDestination(tx, state)
+		destAcct := state.Accounts[dest]
+		destAcct.Balance += acct.Balance
+		state.Accounts[dest] = destAcct
+	}
+	delete(state.Accounts, tx.AccountID)
+	state.RemoveAccountPubKey(string(tx.AccountID))
+	return nil
+}
+
 func ValidateBlock(block domain.Block, prev domain.Block, state *State) (*State, error) {
 	if block.Height != prev.Height+1 {
 		return nil, fmt.Errorf("invalid block height: expected %d got %d", prev.Height+1, block.Height)
@@ -323,6 +422,11 @@ func ValidateBlock(block domain.Block, prev domain.Block, state *State) (*State,
 	for _, tx := range block.Transactions {
 		if err := ApplyTransaction(tx, nextState); err != nil {
 			return nil, fmt.Errorf("tx %s: %w", tx.ID, err)
+		}
+	}
+	for _, closeTx := range block.AccountCloses {
+		if err := ApplyAccountClose(closeTx, nextState); err != nil {
+			return nil, fmt.Errorf("account close %s: %w", closeTx.ID, err)
 		}
 	}
 

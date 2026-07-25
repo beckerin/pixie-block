@@ -3,12 +3,14 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
 	"go.jetify.com/sse"
 
 	"github.com/beckerin/pixie-block/internal/api/template"
+	"github.com/beckerin/pixie-block/internal/domain"
 )
 
 func (s *Server) handleChain(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +66,11 @@ func (s *Server) handleChain(w http.ResponseWriter, r *http.Request) {
 		if err := send("PreviousBlock", id, template.PreviousBlockText(latest.Height, found, prevPayload)); err != nil {
 			return err
 		}
-		return send("Accounts", id, template.Accounts(s.listAccounts()))
+
+		if err := send("ViewerPanel", id, s.viewerPanelHTML(viewer)); err != nil {
+			return err
+		}
+		return send("Balance", id, s.balanceHTML(viewer))
 	}
 
 	var (
@@ -85,4 +91,43 @@ func (s *Server) handleChain(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
+
+func (s *Server) viewerPanelHTML(viewer Viewer) string {
+	if viewer.Audit {
+		return template.ViewerPanel(template.ViewerPanelData{Audit: true})
+	}
+	if viewer.AccountID == "" {
+		return template.ViewerPanel(template.ViewerPanelData{Anonymous: true})
+	}
+	acctType := domain.AccountType("")
+	if acct, ok := s.chain.State().Accounts[domain.AccountID(viewer.AccountID)]; ok {
+		acctType = acct.Type
+	}
+	return template.ViewerPanel(template.ViewerPanelData{
+		AccountID:   viewer.AccountID,
+		AccountType: acctType,
+	})
+}
+
+func (s *Server) balanceHTML(viewer Viewer) string {
+	state := s.chain.State()
+	if viewer.Audit {
+		accounts := make([]domain.Account, 0, len(state.Accounts))
+		for _, acct := range state.Accounts {
+			accounts = append(accounts, acct)
+		}
+		sort.Slice(accounts, func(i, j int) bool {
+			return accounts[i].ID < accounts[j].ID
+		})
+		return template.Balance(template.BalanceData{Audit: true, Accounts: accounts})
+	}
+	if viewer.AccountID == "" {
+		return template.Balance(template.BalanceData{Anonymous: true})
+	}
+	acct, ok := state.Accounts[domain.AccountID(viewer.AccountID)]
+	if !ok {
+		return template.Balance(template.BalanceData{Anonymous: true})
+	}
+	return template.Balance(template.BalanceData{Account: &acct})
 }

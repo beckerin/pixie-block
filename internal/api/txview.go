@@ -37,12 +37,20 @@ type PublicAccountCreate struct {
 	Signature string    `json:"signature"`
 }
 
+// PublicAccountClose is the redacted wire form of an account close.
+type PublicAccountClose struct {
+	Timestamp time.Time `json:"timestamp"`
+	PublicKey string    `json:"public_key"`
+	Signature string    `json:"signature"`
+}
+
 // PublicBlock is a block whose transactions may be redacted per-viewer.
 type PublicBlock struct {
 	Height         int64     `json:"height"`
 	Timestamp      time.Time `json:"timestamp"`
 	Transactions   []any     `json:"transactions"`
 	AccountCreates []any     `json:"account_creates,omitempty"`
+	AccountCloses  []any     `json:"account_closes,omitempty"`
 	PreviousHash   []byte    `json:"previous_hash"`
 	Hash           []byte    `json:"hash"`
 	Validator      string    `json:"validator"`
@@ -103,7 +111,22 @@ func PresentAccountCreate(tx domain.AccountCreateTransaction, viewer Viewer) any
 	}
 }
 
-// PresentBlock applies PresentTx / PresentAccountCreate to every entry in the block.
+// PresentAccountClose returns the full close or a PublicAccountClose depending on the viewer.
+func PresentAccountClose(tx domain.AccountCloseTransaction, viewer Viewer) any {
+	if viewer.Audit ||
+		viewer.AccountID == string(tx.AccountID) ||
+		(tx.Destination != "" && viewer.AccountID == string(tx.Destination)) ||
+		(viewer.PublicKey != "" && viewer.PublicKey == tx.PublicKey) {
+		return tx
+	}
+	return PublicAccountClose{
+		Timestamp: tx.Timestamp,
+		PublicKey: tx.PublicKey,
+		Signature: opaqueTokenBytes(tx.Signature),
+	}
+}
+
+// PresentBlock applies PresentTx / PresentAccountCreate / PresentAccountClose to every entry.
 func PresentBlock(block domain.Block, viewer Viewer, pubKeyB64 func(domain.AccountID) string) PublicBlock {
 	txs := make([]any, len(block.Transactions))
 	for i, tx := range block.Transactions {
@@ -113,11 +136,16 @@ func PresentBlock(block domain.Block, viewer Viewer, pubKeyB64 func(domain.Accou
 	for i, create := range block.AccountCreates {
 		creates[i] = PresentAccountCreate(create, viewer)
 	}
+	closes := make([]any, len(block.AccountCloses))
+	for i, closeTx := range block.AccountCloses {
+		closes[i] = PresentAccountClose(closeTx, viewer)
+	}
 	return PublicBlock{
 		Height:         block.Height,
 		Timestamp:      block.Timestamp,
 		Transactions:   txs,
 		AccountCreates: creates,
+		AccountCloses:  closes,
 		PreviousHash:   block.PreviousHash,
 		Hash:           block.Hash,
 		Validator:      block.Validator,

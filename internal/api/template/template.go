@@ -14,16 +14,37 @@ import (
 //go:embed *.html
 var files embed.FS
 
+var moneyFuncs = htmltemplate.FuncMap{
+	"money": formatMoney,
+}
+
 var (
 	chainInfoTmpl = htmltemplate.Must(
 		htmltemplate.New("chain_info.html").ParseFS(files, "chain_info.html"),
 	)
-	accountsTmpl = htmltemplate.Must(
-		htmltemplate.New("accounts.html").Funcs(htmltemplate.FuncMap{
-			"money": formatMoney,
-		}).ParseFS(files, "accounts.html"),
+	balanceTmpl = htmltemplate.Must(
+		htmltemplate.New("balance.html").Funcs(moneyFuncs).ParseFS(files, "balance.html"),
+	)
+	viewerPanelTmpl = htmltemplate.Must(
+		htmltemplate.New("viewer_panel.html").Funcs(moneyFuncs).ParseFS(files, "viewer_panel.html"),
 	)
 )
+
+// ViewerPanelData drives the authenticated actions panel.
+type ViewerPanelData struct {
+	Anonymous   bool
+	Audit       bool
+	AccountID   string
+	AccountType domain.AccountType
+}
+
+// BalanceData drives the SSE Balance event.
+type BalanceData struct {
+	Anonymous bool
+	Audit     bool
+	Account   *domain.Account
+	Accounts  []domain.Account
+}
 
 func ChainInfo(info domain.ChainInfo) string {
 	var buf bytes.Buffer
@@ -33,10 +54,24 @@ func ChainInfo(info domain.ChainInfo) string {
 	return strings.TrimSpace(buf.String())
 }
 
-func Accounts(accounts []domain.Account) string {
+func ViewerPanel(data ViewerPanelData) string {
+	if data.Anonymous {
+		return `<!-- anonymous -->`
+	}
 	var buf bytes.Buffer
-	if err := accountsTmpl.ExecuteTemplate(&buf, "accounts.html", accounts); err != nil {
-		return `<p class="text-ember font-mono text-sm">erro ao carregar contas</p>`
+	if err := viewerPanelTmpl.ExecuteTemplate(&buf, "viewer_panel.html", data); err != nil {
+		return `<p class="text-ember font-mono text-sm">erro ao carregar painel</p>`
+	}
+	return strings.TrimSpace(buf.String())
+}
+
+func Balance(data BalanceData) string {
+	if data.Anonymous {
+		return ""
+	}
+	var buf bytes.Buffer
+	if err := balanceTmpl.ExecuteTemplate(&buf, "balance.html", data); err != nil {
+		return `<p class="text-ember font-mono text-sm">erro ao carregar saldo</p>`
 	}
 	return strings.TrimSpace(buf.String())
 }

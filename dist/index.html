@@ -30,8 +30,6 @@
       },
     };
 
-    // HTMX 2 FormData não preserva arrays/objetos aninhados.
-    // Esta extensão envia o JSON cru do atributo hx-json.
     htmx.defineExtension('json-body', {
       onEvent(name, evt) {
         if (name === 'htmx:configRequest') {
@@ -43,26 +41,7 @@
       },
     });
 
-    function onTxResult(el, evt) {
-      if (evt.detail.successful) {
-        try {
-          const tx = JSON.parse(evt.detail.xhr.responseText);
-          el.textContent = 'tx ' + tx.id.slice(0, 12) + '… enviada';
-          el.className = 'mt-3 font-mono text-sm text-tide';
-        } catch {
-          el.textContent = 'transação enviada';
-          el.className = 'mt-3 font-mono text-sm text-tide';
-        }
-      } else {
-        try {
-          const err = JSON.parse(evt.detail.xhr.responseText);
-          el.textContent = err.error || 'falha ao criar transação';
-        } catch {
-          el.textContent = 'falha ao criar transação';
-        }
-        el.className = 'mt-3 font-mono text-sm text-ember';
-      }
-    }
+    let sessionPKey = '';
 
     function chainSSEUrl(pkey) {
       const key = (pkey || '').trim();
@@ -70,35 +49,35 @@
       return '/v1/chain?pkey=' + encodeURIComponent(key);
     }
 
-    function setViewerStatus(pkey) {
-      const el = document.getElementById('viewer-status');
-      if (!el) return;
-      if ((pkey || '').trim()) {
-        el.textContent = 'identificado';
-        el.className = 'shrink-0 font-mono text-[10px] uppercase tracking-wider text-tide';
-      } else {
-        el.textContent = 'anônimo';
-        el.className = 'shrink-0 font-mono text-[10px] uppercase tracking-wider text-ink/40';
+    function setAuthUI(pkey) {
+      const status = document.getElementById('viewer-status');
+      const logged = !!(pkey || '').trim();
+      if (status) {
+        status.textContent = logged ? 'identificado' : 'anônimo';
+        status.className = logged
+          ? 'font-mono text-[10px] uppercase tracking-wider text-tide'
+          : 'font-mono text-[10px] uppercase tracking-wider text-ink/40';
+      }
+      const icon = document.getElementById('auth-icon');
+      if (icon) {
+        icon.classList.toggle('text-tide', logged);
+        icon.classList.toggle('text-ink/50', !logged);
       }
     }
 
-    // Reconecta o SSE com ?pkey= (EventSource não envia headers).
-    // O #pkey-wrap é movido para fora antes do clone para preservar foco/valor.
     function reconnectChainSSE(pkey) {
+      sessionPKey = (pkey || '').trim();
       const root = document.getElementById('sse-root');
       if (!root) return;
-      const url = chainSSEUrl(pkey);
+      const url = chainSSEUrl(sessionPKey);
       if (root.getAttribute('sse-connect') === url) {
-        setViewerStatus(pkey);
+        setAuthUI(sessionPKey);
         return;
       }
 
-      const pkeyWrap = document.getElementById('pkey-wrap');
-      const input = document.getElementById('pkey-input');
-      const hadFocus = document.activeElement === input;
-      const selStart = input ? input.selectionStart : null;
-      const selEnd = input ? input.selectionEnd : null;
-      if (pkeyWrap) document.body.appendChild(pkeyWrap);
+      const authMount = document.getElementById('auth-mount');
+      const authWrap = document.getElementById('auth-wrap');
+      if (authWrap) document.body.appendChild(authWrap);
 
       const parent = root.parentNode;
       const next = root.nextSibling;
@@ -107,41 +86,171 @@
       root.remove();
       parent.insertBefore(clone, next);
 
-      const mount = clone.querySelector('#pkey-mount');
-      if (mount && pkeyWrap) mount.appendChild(pkeyWrap);
+      const mount = clone.querySelector('#auth-mount') || authMount;
+      if (mount && authWrap) mount.appendChild(authWrap);
       htmx.process(clone);
-      setViewerStatus(pkey);
+      setAuthUI(sessionPKey);
+      closeAuthToolbar();
+    }
 
-      if (hadFocus && input) {
-        input.focus();
-        if (selStart != null && selEnd != null) {
-          try { input.setSelectionRange(selStart, selEnd); } catch (_) {}
+    function toggleAuthToolbar(evt) {
+      if (evt) evt.stopPropagation();
+      const tb = document.getElementById('auth-toolbar');
+      if (!tb) return;
+      tb.classList.toggle('hidden');
+    }
+
+    function closeAuthToolbar() {
+      const tb = document.getElementById('auth-toolbar');
+      if (tb) tb.classList.add('hidden');
+      const loginForm = document.getElementById('login-form');
+      if (loginForm) loginForm.classList.add('hidden');
+    }
+
+    function showLoginForm(evt) {
+      if (evt) evt.stopPropagation();
+      const loginForm = document.getElementById('login-form');
+      if (loginForm) {
+        loginForm.classList.remove('hidden');
+        const input = document.getElementById('login-pkey');
+        if (input) {
+          input.value = '';
+          input.focus();
         }
       }
     }
 
-    let pkeyTimer = null;
-    function onPKeyInput() {
-      const pkey = document.getElementById('pkey-input').value;
-      clearTimeout(pkeyTimer);
-      pkeyTimer = setTimeout(() => reconnectChainSSE(pkey), 400);
+    function submitLogin(evt) {
+      if (evt) evt.preventDefault();
+      const input = document.getElementById('login-pkey');
+      const pkey = input ? input.value : '';
+      if (!(pkey || '').trim()) return;
+      reconnectChainSSE(pkey);
     }
 
-    function onPKeyKeydown(evt) {
-      if (evt.key === 'Enter') {
-        evt.preventDefault();
-        clearTimeout(pkeyTimer);
-        reconnectChainSSE(evt.target.value);
+    function logout(evt) {
+      if (evt) evt.stopPropagation();
+      reconnectChainSSE('');
+    }
+
+    document.addEventListener('click', (e) => {
+      const wrap = document.getElementById('auth-wrap');
+      if (wrap && !wrap.contains(e.target)) closeAuthToolbar();
+    });
+
+    function onTxResult(el, evt) {
+      if (!el) return;
+      if (evt.detail.successful) {
+        try {
+          const tx = JSON.parse(evt.detail.xhr.responseText);
+          el.textContent = 'tx ' + tx.id.slice(0, 12) + '… enviada';
+          el.className = 'mt-2 font-mono text-xs text-tide';
+        } catch {
+          el.textContent = 'transação enviada';
+          el.className = 'mt-2 font-mono text-xs text-tide';
+        }
+      } else {
+        try {
+          const err = JSON.parse(evt.detail.xhr.responseText);
+          el.textContent = err.error || 'falha ao criar transação';
+        } catch {
+          el.textContent = 'falha ao criar transação';
+        }
+        el.className = 'mt-2 font-mono text-xs text-ember';
       }
     }
 
-    function clearPKey() {
-      const input = document.getElementById('pkey-input');
-      input.value = '';
-      clearTimeout(pkeyTimer);
-      reconnectChainSSE('');
-      input.focus();
+    function onAccountCreateResult(el, evt) {
+      if (!el) return;
+      if (evt.detail.successful) {
+        try {
+          const res = JSON.parse(evt.detail.xhr.responseText);
+          el.innerHTML = 'criada · tx ' + (res.tx_id || '').slice(0, 12) +
+            '… · <span class="break-all">pkey: ' + (res.private_key || '') + '</span>';
+          el.className = 'mt-2 font-mono text-xs text-tide break-all';
+        } catch {
+          el.textContent = 'conta criada';
+          el.className = 'mt-2 font-mono text-xs text-tide';
+        }
+      } else {
+        try {
+          const err = JSON.parse(evt.detail.xhr.responseText);
+          el.textContent = err.error || 'falha ao criar conta';
+        } catch {
+          el.textContent = 'falha ao criar conta';
+        }
+        el.className = 'mt-2 font-mono text-xs text-ember';
+      }
     }
+
+    function onCloseResult(el, evt) {
+      if (!el) return;
+      if (evt.detail.successful) {
+        try {
+          const res = JSON.parse(evt.detail.xhr.responseText);
+          el.textContent = 'encerrada · tx ' + (res.tx_id || '').slice(0, 12) + '…';
+          el.className = 'mt-2 font-mono text-xs text-tide';
+        } catch {
+          el.textContent = 'conta encerrada';
+          el.className = 'mt-2 font-mono text-xs text-tide';
+        }
+      } else {
+        try {
+          const err = JSON.parse(evt.detail.xhr.responseText);
+          el.textContent = err.error || 'falha ao encerrar';
+        } catch {
+          el.textContent = 'falha ao encerrar';
+        }
+        el.className = 'mt-2 font-mono text-xs text-ember';
+      }
+    }
+
+    function prepareCreateAccount(btn) {
+      const id = (document.getElementById('create-id') || {}).value || '';
+      const type = (document.getElementById('create-type') || {}).value || 'person';
+      btn.setAttribute('hx-json', JSON.stringify({ id: id.trim(), type }));
+    }
+
+    function prepareCreateTx(btn) {
+      const payer = (document.getElementById('tx-payer') || {}).value || '';
+      const payee = (document.getElementById('tx-payee') || {}).value || '';
+      const amount = parseInt((document.getElementById('tx-amount') || {}).value || '0', 10);
+      btn.setAttribute('hx-json', JSON.stringify({
+        payer: payer.trim(),
+        payee: payee.trim(),
+        items: [{ description: 'Pagamento', amount: amount, tax_codes: [] }],
+      }));
+    }
+
+    function toggleCloseDestination() {
+      const type = (document.getElementById('close-type') || {}).value;
+      const wrap = document.getElementById('close-dest-wrap');
+      if (wrap) wrap.classList.toggle('hidden', type !== 'person');
+    }
+
+    function prepareCloseAccount(btn) {
+      const id = ((document.getElementById('close-id') || {}).value || '').trim();
+      const type = (document.getElementById('close-type') || {}).value || 'merchant';
+      const dest = ((document.getElementById('close-destination') || {}).value || '').trim();
+      btn.setAttribute('hx-delete', '/v1/accounts/' + encodeURIComponent(id));
+      const body = {};
+      if (type === 'person' && dest) body.destination = dest;
+      btn.setAttribute('hx-json', JSON.stringify(body));
+      if (type === 'merchant' && sessionPKey) {
+        btn.setAttribute('hx-headers', JSON.stringify({ 'X-Private-Key': sessionPKey }));
+      } else {
+        btn.removeAttribute('hx-headers');
+      }
+    }
+
+    document.body.addEventListener('htmx:afterSwap', (evt) => {
+      const target = evt.detail && evt.detail.target;
+      if (!target) return;
+      if (target.id === 'viewer-panel') {
+        htmx.process(target);
+        toggleCloseDestination();
+      }
+    });
   </script>
   <style>
     body {
@@ -167,13 +276,62 @@
 <body class="text-ink antialiased">
   <div id="sse-root" class="mx-auto max-w-12xl px-4 py-10 sm:px-6" hx-ext="sse" sse-connect="/v1/chain">
     <header class="mb-10">
-      <p class="font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
-        Pixie Block
-      </p>
-      <p class="mt-2 max-w-xl text-base text-ink/60">
-        Explorer da chain — bloco anterior, bloco atual e saldos das contas.
-      </p>
-      <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
+            Pixie Block
+          </p>
+          <p class="mt-2 max-w-xl text-base text-ink/60">
+            Explorer da chain — blocos e ações autenticadas.
+          </p>
+        </div>
+        <div id="auth-mount" class="relative shrink-0 pt-1">
+          <div id="auth-wrap" class="relative">
+            <button
+              id="auth-icon"
+              type="button"
+              onclick="toggleAuthToolbar(event)"
+              class="flex h-10 w-10 items-center justify-center rounded-full border border-ink/10 bg-white/70 text-ink/50 transition hover:border-tide/40 hover:text-tide"
+              title="Conta"
+              aria-label="Conta"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5">
+                <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A12.836 12.836 0 0 1 12 22.5c-2.357 0-4.59-.58-6.562-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <div
+              id="auth-toolbar"
+              class="absolute right-0 z-20 mt-2 hidden w-64 rounded-xl border border-ink/10 bg-white/95 p-3 shadow-lg backdrop-blur"
+              onclick="event.stopPropagation()"
+            >
+              <p id="viewer-status" class="font-mono text-[10px] uppercase tracking-wider text-ink/40">anônimo</p>
+              <div class="mt-2 flex flex-col gap-1">
+                <button type="button" onclick="showLoginForm(event)"
+                  class="rounded-lg px-3 py-2 text-left font-display text-sm font-bold text-ink transition hover:bg-mist">
+                  Login
+                </button>
+                <button type="button" onclick="logout(event)"
+                  class="rounded-lg px-3 py-2 text-left font-display text-sm font-bold text-ink/70 transition hover:bg-mist">
+                  Logout
+                </button>
+              </div>
+              <form id="login-form" class="mt-3 hidden border-t border-ink/10 pt-3" onsubmit="submitLogin(event)">
+                <label class="block">
+                  <span class="font-mono text-[10px] uppercase tracking-wider text-ink/40">chave privada</span>
+                  <input id="login-pkey" type="password" autocomplete="off" spellcheck="false"
+                    class="mt-1 w-full rounded-lg border border-ink/10 bg-foam px-3 py-2 font-mono text-xs outline-none focus:border-tide"
+                    placeholder="cole sua pkey" />
+                </label>
+                <button type="submit"
+                  class="mt-2 w-full rounded-lg bg-tide px-3 py-2 font-display text-sm font-bold text-white hover:bg-tideDark">
+                  Entrar
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4">
         <div
           id="chain-info"
           class="inline-flex items-center gap-2 rounded-full border border-ink/10 bg-white/60 px-3 py-1 font-mono text-xs text-ink/70"
@@ -183,37 +341,12 @@
             <span data-chain>carregando…</span>
           </span>
         </div>
-        <div id="pkey-mount" class="min-w-0 flex-1">
-          <div
-            id="pkey-wrap"
-            class="flex min-w-0 items-center gap-2 rounded-full border border-ink/10 bg-white/60 px-3 py-1"
-          >
-            <label for="pkey-input" class="shrink-0 font-mono text-[10px] uppercase tracking-wider text-ink/40">
-              pkey
-            </label>
-            <input
-              id="pkey-input"
-              type="password"
-              autocomplete="off"
-              spellcheck="false"
-              placeholder="chave privada (vazio = anônimo)"
-              class="min-w-0 flex-1 bg-transparent font-mono text-xs text-ink outline-none placeholder:text-ink/30"
-              oninput="onPKeyInput()"
-              onkeydown="onPKeyKeydown(event)"
-            />
-            <span id="viewer-status" class="shrink-0 font-mono text-[10px] uppercase tracking-wider text-ink/40">anônimo</span>
-            <button
-              type="button"
-              onclick="clearPKey()"
-              class="shrink-0 font-mono text-[10px] uppercase tracking-wider text-ink/40 transition hover:text-ember"
-              title="Limpar chave e voltar ao anônimo"
-            >
-              limpar
-            </button>
-          </div>
-        </div>
       </div>
     </header>
+
+    <div id="viewer-panel" sse-swap="ViewerPanel"></div>
+
+    <section id="balance-panel" class="mb-8 empty:hidden" sse-swap="Balance"></section>
 
     <section class="mb-8 grid gap-4 md:grid-cols-2">
       <article class="panel rounded-2xl p-5">
@@ -236,37 +369,6 @@
           sse-swap="LatestBlock"
         >carregando…</pre>
       </article>
-    </section>
-
-    <section class="panel mb-10 rounded-2xl p-5">
-      <h2 class="font-display text-lg font-bold text-ink/80">Nova transação</h2>
-      <p class="mt-1 text-sm text-ink/50">
-        Envia um pagamento demo: person_001 → merchant_001 (R$ 10,00 + CBS/IBS).
-      </p>
-      <button
-        type="button"
-        class="mt-4 rounded-lg bg-tide px-5 py-2.5 font-display text-sm font-bold text-white transition hover:bg-tideDark active:scale-[0.98] disabled:opacity-50"
-        hx-ext="json-body"
-        hx-post="/v1/transactions"
-        hx-json='{"payer":"person_001","payee":"merchant_001","items":[{"description":"Pagamento demo","amount":1000,"tax_codes":["CBS","IBS"]}]}'
-        hx-swap="none"    
-        hx-disabled-elt="this"
-        hx-on::after-request="onTxResult(document.getElementById('tx-status'), event)"
-      >
-        Criar transação
-      </button>
-      <p id="tx-status" class="mt-3 font-mono text-sm text-ink/40"></p>
-    </section>
-
-    <section class="panel rounded-2xl p-5">
-      <h2 class="font-display text-lg font-bold text-ink/80">Contas</h2>
-      <div
-        id="accounts"
-        class="mt-2"
-        sse-swap="Accounts"
-      >
-        <p class="font-mono text-sm text-ink/40">carregando…</p>
-      </div>
     </section>
   </div>
 </body>

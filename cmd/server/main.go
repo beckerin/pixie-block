@@ -36,6 +36,11 @@ func (s *submitAdapter) SubmitAccountCreate(tx domain.AccountCreateTransaction) 
 	return nil
 }
 
+func (s *submitAdapter) SubmitAccountClose(tx domain.AccountCloseTransaction) error {
+	s.bridge.BroadcastAccountClose(tx)
+	return nil
+}
+
 func main() {
 
 	var (
@@ -87,6 +92,7 @@ func main() {
 
 	pool := mempool.New()
 	createPool := mempool.NewAccountCreatePool()
+	closePool := mempool.NewAccountClosePool()
 
 	var (
 		producer            p2p.BlockProducer
@@ -112,7 +118,7 @@ func main() {
 		}
 	}
 
-	bridge := p2p.NewBridge(genesis.ChainID, *nodeID, bc, pool, createPool, producer, *p2pListen, peers)
+	bridge := p2p.NewBridge(genesis.ChainID, *nodeID, bc, pool, createPool, closePool, producer, *p2pListen, peers)
 	if err := bridge.Start(); err != nil {
 		log.Fatalf("start p2p: %v", err)
 	} else {
@@ -121,12 +127,12 @@ func main() {
 
 	adapter := &submitAdapter{bridge: bridge}
 	canCreate := producer != nil
-	server := api.NewServer(bc, pool, createPool, &keystore, *keystorePath, validatorPrivForAPI, canCreate, adapter, adapter)
+	server := api.NewServer(bc, pool, createPool, closePool, &keystore, *keystorePath, validatorPrivForAPI, canCreate, adapter, adapter, adapter)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go runBlockProducer(ctx, genesis, pool, createPool, bridge, bc)
+	go runBlockProducer(ctx, genesis, pool, createPool, closePool, bridge, bc)
 
 	go func() {
 		log.Printf("API listening on %s", *apiAddr)
@@ -141,7 +147,7 @@ func main() {
 	cancel()
 }
 
-func runBlockProducer(ctx context.Context, genesis config.Genesis, pool *mempool.Pool, createPool *mempool.AccountCreatePool, bridge *p2p.Bridge, bc *chain.Blockchain) {
+func runBlockProducer(ctx context.Context, genesis config.Genesis, pool *mempool.Pool, createPool *mempool.AccountCreatePool, closePool *mempool.AccountClosePool, bridge *p2p.Bridge, bc *chain.Blockchain) {
 	blockTime := time.Duration(genesis.BlockTimeSeconds) * time.Second
 	if blockTime <= 0 {
 		blockTime = time.Second
@@ -160,7 +166,7 @@ func runBlockProducer(ctx context.Context, genesis config.Genesis, pool *mempool
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			n := pool.Len() + createPool.Len()
+			n := pool.Len() + createPool.Len() + closePool.Len()
 			if n == 0 {
 				continue
 			}

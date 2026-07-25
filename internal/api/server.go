@@ -20,10 +20,15 @@ type AccountCreateSubmitter interface {
 	SubmitAccountCreate(tx domain.AccountCreateTransaction) error
 }
 
+type AccountCloseSubmitter interface {
+	SubmitAccountClose(tx domain.AccountCloseTransaction) error
+}
+
 type Server struct {
 	chain             *chain.Blockchain
 	mempool           *mempool.Pool
 	createPool        *mempool.AccountCreatePool
+	closePool         *mempool.AccountClosePool
 	keystore          *config.Keystore
 	keystoreMu        sync.Mutex
 	keystorePath      string
@@ -31,29 +36,34 @@ type Server struct {
 	canCreateAccounts bool
 	submit            TxSubmitter
 	submitCreates     AccountCreateSubmitter
+	submitCloses      AccountCloseSubmitter
 }
 
 func NewServer(
 	bc *chain.Blockchain,
 	pool *mempool.Pool,
 	createPool *mempool.AccountCreatePool,
+	closePool *mempool.AccountClosePool,
 	keystore *config.Keystore,
 	keystorePath string,
 	validatorPrivB64 string,
 	canCreateAccounts bool,
 	submitter TxSubmitter,
 	createSubmitter AccountCreateSubmitter,
+	closeSubmitter AccountCloseSubmitter,
 ) *Server {
 	return &Server{
 		chain:             bc,
 		mempool:           pool,
 		createPool:        createPool,
+		closePool:         closePool,
 		keystore:          keystore,
 		keystorePath:      keystorePath,
 		validatorPrivB64:  validatorPrivB64,
 		canCreateAccounts: canCreateAccounts,
 		submit:            submitter,
 		submitCreates:     createSubmitter,
+		submitCloses:      closeSubmitter,
 	}
 }
 

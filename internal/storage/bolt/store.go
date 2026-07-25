@@ -127,10 +127,10 @@ func (s *Store) LoadBlocks() ([]domain.Block, error) {
 }
 
 type persistedState struct {
-	Accounts        map[domain.AccountID]domain.Account `json:"accounts"`
-	TaxTreasury     domain.AccountID                    `json:"tax_treasury"`
-	AllowedTaxAccts []domain.AccountID                  `json:"allowed_tax_accounts"`
-	Taxes           config.Taxes                        `json:"taxes"`
+	Accounts map[domain.AccountID]domain.Account `json:"accounts"`
+
+	AllowedTaxAccts []domain.AccountID `json:"allowed_tax_accounts"`
+	Taxes           config.Taxes       `json:"taxes"`
 }
 
 func marshalState(state *ledger.State) ([]byte, error) {
@@ -141,7 +141,6 @@ func marshalState(state *ledger.State) ([]byte, error) {
 
 	payload := persistedState{
 		Accounts:        state.Accounts,
-		TaxTreasury:     state.TaxTreasury,
 		AllowedTaxAccts: allowed,
 		Taxes:           config.Taxes{TaxSplit: state.TaxSplit},
 	}
@@ -180,7 +179,7 @@ func (s *Store) LoadState() (*ledger.State, error) {
 		return nil, nil
 	}
 
-	state := ledger.NewState(payload.TaxTreasury, payload.AllowedTaxAccts, payload.Taxes)
+	state := ledger.NewState(payload.AllowedTaxAccts, payload.Taxes)
 	for id, acct := range payload.Accounts {
 		state.Accounts[id] = acct
 	}

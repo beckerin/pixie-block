@@ -22,6 +22,7 @@ type Bridge struct {
 	chain      *chain.Blockchain
 	mempool    *mempool.Pool
 	createPool *mempool.AccountCreatePool
+	closePool  *mempool.AccountClosePool
 	node       *Node
 	producer   BlockProducer
 
@@ -30,16 +31,17 @@ type Bridge struct {
 
 type BlockProducer interface {
 	CanProduce(height int64) bool
-	CreateBlock(height int64, prev domain.Block, txs []domain.PaymentTransaction, creates []domain.AccountCreateTransaction) (domain.Block, error)
+	CreateBlock(height int64, prev domain.Block, txs []domain.PaymentTransaction, creates []domain.AccountCreateTransaction, closes []domain.AccountCloseTransaction) (domain.Block, error)
 }
 
-func NewBridge(chainID, nodeID string, bc *chain.Blockchain, pool *mempool.Pool, createPool *mempool.AccountCreatePool, producer BlockProducer, listenAddr string, peers []string) *Bridge {
+func NewBridge(chainID, nodeID string, bc *chain.Blockchain, pool *mempool.Pool, createPool *mempool.AccountCreatePool, closePool *mempool.AccountClosePool, producer BlockProducer, listenAddr string, peers []string) *Bridge {
 	b := &Bridge{
 		chainID:    chainID,
 		nodeID:     nodeID,
 		chain:      bc,
 		mempool:    pool,
 		createPool: createPool,
+		closePool:  closePool,
 		producer:   producer,
 	}
 	b.node = New(listenAddr, peers, b)
@@ -56,6 +58,10 @@ func (b *Bridge) BroadcastTransaction(tx domain.PaymentTransaction) {
 
 func (b *Bridge) BroadcastAccountCreate(tx domain.AccountCreateTransaction) {
 	b.node.Broadcast(MsgNewAccountCreate, tx)
+}
+
+func (b *Bridge) BroadcastAccountClose(tx domain.AccountCloseTransaction) {
+	b.node.Broadcast(MsgNewAccountClose, tx)
 }
 
 func (b *Bridge) BroadcastBlock(block domain.Block) {
@@ -83,6 +89,16 @@ func (b *Bridge) OnNewAccountCreate(data json.RawMessage) error {
 	}
 	return b.createPool.TryAdd(tx, func() error {
 		return b.chain.ValidateAccountCreate(tx)
+	})
+}
+
+func (b *Bridge) OnNewAccountClose(data json.RawMessage) error {
+	var tx domain.AccountCloseTransaction
+	if err := json.Unmarshal(data, &tx); err != nil {
+		return err
+	}
+	return b.closePool.TryAdd(tx, func() error {
+		return b.chain.ValidateAccountClose(tx)
 	})
 }
 
@@ -140,9 +156,15 @@ func (b *Bridge) applyBlocks(blocks []domain.Block) error {
 		for i, tx := range block.AccountCreates {
 			createIDs[i] = tx.ID
 		}
+		closeIDs := make([]string, len(block.AccountCloses))
+		for i, tx := range block.AccountCloses {
+			closeIDs[i] = tx.ID
+		}
 		if err := b.mempool.Commit(txIDs, func() error {
 			return b.createPool.Commit(createIDs, func() error {
-				return b.chain.AppendBlock(block)
+				return b.closePool.Commit(closeIDs, func() error {
+					return b.chain.AppendBlock(block)
+				})
 			})
 		}); err != nil {
 			return err
@@ -169,13 +191,13 @@ func (b *Bridge) ProduceBlockIfReady() (domain.Block, bool, error) {
 	if maxTxs <= 0 {
 		maxTxs = 100
 	}
-	txs, creates := b.selectExecutable(maxTxs)
-	if len(txs) == 0 && len(creates) == 0 {
+	txs, creates, closes := b.selectExecutable(maxTxs)
+	if len(txs) == 0 && len(creates) == 0 && len(closes) == 0 {
 		return domain.Block{}, false, nil
 	}
 
 	prev := b.chain.LatestBlock()
-	block, err := b.producer.CreateBlock(height, prev, txs, creates)
+	block, err := b.producer.CreateBlock(height, prev, txs, creates, closes)
 	if err != nil {
 		return domain.Block{}, false, err
 	}
@@ -188,9 +210,15 @@ func (b *Bridge) ProduceBlockIfReady() (domain.Block, bool, error) {
 	for i, tx := range creates {
 		createIDs[i] = tx.ID
 	}
+	closeIDs := make([]string, len(closes))
+	for i, tx := range closes {
+		closeIDs[i] = tx.ID
+	}
 	if err := b.mempool.Commit(txIDs, func() error {
 		return b.createPool.Commit(createIDs, func() error {
-			return b.chain.AppendBlock(block)
+			return b.closePool.Commit(closeIDs, func() error {
+				return b.chain.AppendBlock(block)
+			})
 		})
 	}); err != nil {
 		return domain.Block{}, false, err
@@ -200,9 +228,8 @@ func (b *Bridge) ProduceBlockIfReady() (domain.Block, bool, error) {
 	return block, true, nil
 }
 
-// selectExecutable picks up to max account creates and payment txs that apply
-// cleanly in order against confirmed state (creates first).
-func (b *Bridge) selectExecutable(max int) ([]domain.PaymentTransaction, []domain.AccountCreateTransaction) {
+// selectExecutable picks creates, then payments, then closes (matching ValidateBlock order).
+func (b *Bridge) selectExecutable(max int) ([]domain.PaymentTransaction, []domain.AccountCreateTransaction, []domain.AccountCloseTransaction) {
 	state := b.chain.State()
 	creates := make([]domain.AccountCreateTransaction, 0)
 	var dropCreates []string
@@ -240,5 +267,23 @@ func (b *Bridge) selectExecutable(max int) ([]domain.PaymentTransaction, []domai
 	if len(drop) > 0 {
 		b.mempool.Remove(drop...)
 	}
-	return selected, creates
+
+	remaining = max - len(creates) - len(selected)
+	closes := make([]domain.AccountCloseTransaction, 0, remaining)
+	var dropCloses []string
+	for _, tx := range b.closePool.Peek(0) {
+		if len(closes) >= remaining {
+			break
+		}
+		if err := ledger.ApplyAccountClose(tx, state); err != nil {
+			dropCloses = append(dropCloses, tx.ID)
+			log.Printf("dropping invalid mempool account close %s: %v", tx.ID, err)
+			continue
+		}
+		closes = append(closes, tx)
+	}
+	if len(dropCloses) > 0 {
+		b.closePool.Remove(dropCloses...)
+	}
+	return selected, creates, closes
 }

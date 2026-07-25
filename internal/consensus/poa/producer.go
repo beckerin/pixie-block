@@ -60,7 +60,7 @@ func (p *Producer) CanProduce(height int64) bool {
 	return p.ValidatorForHeight(height).ID == p.validator.ID
 }
 
-func (p *Producer) CreateBlock(height int64, prev domain.Block, txs []domain.PaymentTransaction, creates []domain.AccountCreateTransaction) (domain.Block, error) {
+func (p *Producer) CreateBlock(height int64, prev domain.Block, txs []domain.PaymentTransaction, creates []domain.AccountCreateTransaction, closes []domain.AccountCloseTransaction) (domain.Block, error) {
 	if !p.CanProduce(height) {
 		return domain.Block{}, fmt.Errorf("validator %q cannot produce block at height %d", p.validator.ID, height)
 	}
@@ -70,6 +70,7 @@ func (p *Producer) CreateBlock(height int64, prev domain.Block, txs []domain.Pay
 		Timestamp:      time.Now().UTC(),
 		Transactions:   txs,
 		AccountCreates: creates,
+		AccountCloses:  closes,
 		PreviousHash:   prev.Hash,
 		Validator:      p.validator.ID,
 	}

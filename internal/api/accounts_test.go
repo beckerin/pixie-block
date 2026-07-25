@@ -14,7 +14,7 @@ import (
 
 func TestCreateAccountForbiddenWithoutValidator(t *testing.T) {
 	ks := &config.Keystore{}
-	server := api.NewServer(nil, mempool.New(), mempool.NewAccountCreatePool(), ks, "", "", false, nil, nil)
+	server := api.NewServer(nil, mempool.New(), mempool.NewAccountCreatePool(), mempool.NewAccountClosePool(), ks, "", "", false, nil, nil, nil)
 
 	body := bytes.NewBufferString(`{"id":"person_005","type":"person"}`)
 	req := httptest.NewRequest(http.MethodPost, "/v1/accounts", body)

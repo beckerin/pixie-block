@@ -21,6 +21,7 @@ type Blockchain struct {
 	blocks      []domain.Block
 	txIndex     map[string]domain.PaymentTransaction
 	createIndex map[string]domain.AccountCreateTransaction
+	closeIndex  map[string]domain.AccountCloseTransaction
 }
 
 func New(genesis config.Genesis, store *bolt.Store, state *ledger.State, keystore config.Keystore) (*Blockchain, error) {
@@ -30,6 +31,7 @@ func New(genesis config.Genesis, store *bolt.Store, state *ledger.State, keystor
 		state:       state,
 		txIndex:     make(map[string]domain.PaymentTransaction),
 		createIndex: make(map[string]domain.AccountCreateTransaction),
+		closeIndex:  make(map[string]domain.AccountCloseTransaction),
 	}
 
 	if err := node.HydrateState(bc.state, genesis, keystore); err != nil {
@@ -63,6 +65,9 @@ func New(genesis config.Genesis, store *bolt.Store, state *ledger.State, keystor
 		}
 		for _, create := range block.AccountCreates {
 			bc.createIndex[create.ID] = create
+		}
+		for _, closeTx := range block.AccountCloses {
+			bc.closeIndex[closeTx.ID] = closeTx
 		}
 	}
 
@@ -98,6 +103,9 @@ func hydrateAccountCreatePubKeys(state *ledger.State, blocks []domain.Block) err
 			}
 			state.SetAccountPubKey(string(create.Account.ID), pub)
 		}
+		for _, closeTx := range block.AccountCloses {
+			state.RemoveAccountPubKey(string(closeTx.AccountID))
+		}
 	}
 	return nil
 }
@@ -130,7 +138,6 @@ func (bc *Blockchain) validateChain(keystore config.Keystore) error {
 	}
 
 	state := ledger.NewState(
-		domain.AccountID(bc.genesis.TaxTreasury),
 		toAccountIDs(bc.genesis.AllowedTaxAccounts),
 		config.Taxes{TaxSplit: bc.state.TaxSplit},
 	)
@@ -280,6 +287,12 @@ func (bc *Blockchain) ValidateAccountCreate(tx domain.AccountCreateTransaction) 
 	return ledger.ValidateAccountCreate(tx, bc.state.Clone())
 }
 
+func (bc *Blockchain) ValidateAccountClose(tx domain.AccountCloseTransaction) error {
+	bc.mu.RLock()
+	defer bc.mu.RUnlock()
+	return ledger.ValidateAccountClose(tx, bc.state.Clone())
+}
+
 // ValidatePendingWith checks tx against confirmed state after applying pending spends in order.
 // Prefer ValidateAdmit for the hot admit path.
 func (bc *Blockchain) ValidatePendingWith(tx domain.PaymentTransaction, pending []domain.PaymentTransaction) error {
@@ -316,6 +329,9 @@ func (bc *Blockchain) AppendBlock(block domain.Block) error {
 	}
 	for _, create := range block.AccountCreates {
 		bc.createIndex[create.ID] = create
+	}
+	for _, closeTx := range block.AccountCloses {
+		bc.closeIndex[closeTx.ID] = closeTx
 	}
 
 	return nil

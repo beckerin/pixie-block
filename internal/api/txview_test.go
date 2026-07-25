@@ -352,3 +352,92 @@ func TestPresentBlockAccountCreatesRedacted(t *testing.T) {
 		t.Fatalf("got %T, want full create", owned.AccountCreates[0])
 	}
 }
+
+func TestPresentAccountClosePrivacyRules(t *testing.T) {
+	acctPub, acctPriv, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	heirPub, heirPriv, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, otherPriv, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, validatorPriv, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	acctPubB64 := crypto.PublicKeyBase64(acctPub)
+	validatorPrivB64 := crypto.PrivateKeyBase64(validatorPriv)
+	keystore := config.Keystore{Entries: []config.KeystoreEntry{
+		{AccountID: "person_die", PrivateKey: crypto.PrivateKeyBase64(acctPriv)},
+		{AccountID: "person_heir", PrivateKey: crypto.PrivateKeyBase64(heirPriv)},
+		{AccountID: "other", PrivateKey: crypto.PrivateKeyBase64(otherPriv)},
+	}}
+	_ = heirPub
+
+	closeTx := domain.AccountCloseTransaction{
+		ID:          "close-1",
+		Timestamp:   time.Unix(3, 0).UTC(),
+		AccountID:   "person_die",
+		PublicKey:   acctPubB64,
+		Destination: "person_heir",
+		Signature:   []byte{4, 5, 6},
+	}
+
+	t.Run("anonymous_public", func(t *testing.T) {
+		got := api.PresentAccountClose(closeTx, api.Viewer{})
+		pub, ok := got.(api.PublicAccountClose)
+		if !ok {
+			t.Fatalf("got %T, want PublicAccountClose", got)
+		}
+		if pub.PublicKey != acctPubB64 {
+			t.Fatalf("public_key=%q", pub.PublicKey)
+		}
+		data, _ := json.Marshal(pub)
+		var decoded map[string]any
+		_ = json.Unmarshal(data, &decoded)
+		if _, ok := decoded["account_id"]; ok {
+			t.Fatal("public form must omit account_id")
+		}
+		if _, ok := decoded["destination"]; ok {
+			t.Fatal("public form must omit destination")
+		}
+	})
+
+	t.Run("owner_full", func(t *testing.T) {
+		viewer := api.ResolveViewer(keystore, validatorPrivB64, crypto.PrivateKeyBase64(acctPriv))
+		got := api.PresentAccountClose(closeTx, viewer)
+		if _, ok := got.(domain.AccountCloseTransaction); !ok {
+			t.Fatalf("got %T, want full close", got)
+		}
+	})
+
+	t.Run("heir_full", func(t *testing.T) {
+		viewer := api.ResolveViewer(keystore, validatorPrivB64, crypto.PrivateKeyBase64(heirPriv))
+		got := api.PresentAccountClose(closeTx, viewer)
+		if _, ok := got.(domain.AccountCloseTransaction); !ok {
+			t.Fatalf("got %T, want full close for destination", got)
+		}
+	})
+
+	t.Run("third_party_public", func(t *testing.T) {
+		viewer := api.ResolveViewer(keystore, validatorPrivB64, crypto.PrivateKeyBase64(otherPriv))
+		got := api.PresentAccountClose(closeTx, viewer)
+		if _, ok := got.(api.PublicAccountClose); !ok {
+			t.Fatalf("got %T, want PublicAccountClose", got)
+		}
+	})
+
+	t.Run("validator_audit_full", func(t *testing.T) {
+		viewer := api.ResolveViewer(keystore, validatorPrivB64, validatorPrivB64)
+		got := api.PresentAccountClose(closeTx, viewer)
+		if _, ok := got.(domain.AccountCloseTransaction); !ok {
+			t.Fatalf("got %T, want full close", got)
+		}
+	})
+}

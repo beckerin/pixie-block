@@ -40,7 +40,6 @@ type Genesis struct {
 	GenesisTime        time.Time         `json:"genesis_time"`
 	BlockTimeSeconds   int               `json:"block_time_seconds"`
 	MaxTxsPerBlock     int               `json:"max_txs_per_block"`
-	TaxTreasury        string            `json:"tax_treasury"`
 	AllowedTaxAccounts []string          `json:"allowed_tax_accounts"`
 	Validators         []ValidatorConfig `json:"validators"`
 	Accounts           []AccountConfig   `json:"accounts"`
@@ -72,11 +71,8 @@ func LoadGenesis(path string) (Genesis, error) {
 	if genesis.ChainID == "" {
 		return Genesis{}, fmt.Errorf("genesis chain_id is required")
 	}
-	if genesis.TaxTreasury == "" {
-		return Genesis{}, fmt.Errorf("genesis tax_treasury is required")
-	}
 	if len(genesis.AllowedTaxAccounts) == 0 {
-		genesis.AllowedTaxAccounts = []string{genesis.TaxTreasury}
+		genesis.AllowedTaxAccounts = []string{"federal_treasury"}
 	}
 	if genesis.GenesisTime.IsZero() {
 		genesis.GenesisTime = time.Unix(0, 0).UTC()
@@ -135,6 +131,16 @@ func (t Taxes) Validate(allowedTaxAccounts []string) error {
 
 func (k *Keystore) AppendEntry(entry KeystoreEntry) {
 	k.Entries = append(k.Entries, entry)
+}
+
+func (k *Keystore) RemoveEntry(accountID string) {
+	out := make([]KeystoreEntry, 0, len(k.Entries))
+	for _, entry := range k.Entries {
+		if entry.AccountID != accountID {
+			out = append(out, entry)
+		}
+	}
+	k.Entries = out
 }
 
 func SaveKeystore(path string, keystore Keystore) error {

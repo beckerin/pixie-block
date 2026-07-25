@@ -20,7 +20,7 @@ func BuildInitialState(genesis config.Genesis, keystore config.Keystore, taxes c
 		allowed[i] = domain.AccountID(id)
 	}
 
-	state := ledger.NewState(domain.AccountID(genesis.TaxTreasury), allowed, taxes)
+	state := ledger.NewState(allowed, taxes)
 
 	for _, acct := range genesis.Accounts {
 		state.SetAccount(domain.Account{

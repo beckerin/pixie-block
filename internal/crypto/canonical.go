@@ -22,11 +22,20 @@ type unsignedAccountCreate struct {
 	PublicKey string         `json:"public_key"`
 }
 
+type unsignedAccountClose struct {
+	ID          string           `json:"id"`
+	Timestamp   string           `json:"timestamp"`
+	AccountID   domain.AccountID `json:"account_id"`
+	PublicKey   string           `json:"public_key"`
+	Destination domain.AccountID `json:"destination,omitempty"`
+}
+
 type unsignedBlock struct {
 	Height         int64                   `json:"height"`
 	Timestamp      string                  `json:"timestamp"`
 	Transactions   []unsignedTransaction   `json:"transactions"`
 	AccountCreates []unsignedAccountCreate `json:"account_creates,omitempty"`
+	AccountCloses  []unsignedAccountClose  `json:"account_closes,omitempty"`
 	PreviousHash   string                  `json:"previous_hash"`
 	Validator      string                  `json:"validator"`
 }
@@ -48,6 +57,17 @@ func AccountCreateSignBytes(tx domain.AccountCreateTransaction) ([]byte, error) 
 		Timestamp: tx.Timestamp.UTC().Format("2006-01-02T15:04:05Z"),
 		Account:   tx.Account,
 		PublicKey: tx.PublicKey,
+	}
+	return json.Marshal(payload)
+}
+
+func AccountCloseSignBytes(tx domain.AccountCloseTransaction) ([]byte, error) {
+	payload := unsignedAccountClose{
+		ID:          tx.ID,
+		Timestamp:   tx.Timestamp.UTC().Format("2006-01-02T15:04:05Z"),
+		AccountID:   tx.AccountID,
+		PublicKey:   tx.PublicKey,
+		Destination: tx.Destination,
 	}
 	return json.Marshal(payload)
 }
@@ -74,11 +94,23 @@ func BlockSignBytes(block domain.Block) ([]byte, error) {
 		}
 	}
 
+	closes := make([]unsignedAccountClose, len(block.AccountCloses))
+	for i, tx := range block.AccountCloses {
+		closes[i] = unsignedAccountClose{
+			ID:          tx.ID,
+			Timestamp:   tx.Timestamp.UTC().Format("2006-01-02T15:04:05Z"),
+			AccountID:   tx.AccountID,
+			PublicKey:   tx.PublicKey,
+			Destination: tx.Destination,
+		}
+	}
+
 	payload := unsignedBlock{
 		Height:         block.Height,
 		Timestamp:      block.Timestamp.UTC().Format("2006-01-02T15:04:05Z"),
 		Transactions:   txs,
 		AccountCreates: creates,
+		AccountCloses:  closes,
 		PreviousHash:   fmt.Sprintf("%x", block.PreviousHash),
 		Validator:      block.Validator,
 	}

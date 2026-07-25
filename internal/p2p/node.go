@@ -17,6 +17,7 @@ const (
 	MsgHandshake        MessageType = "handshake"
 	MsgNewTransaction   MessageType = "new_transaction"
 	MsgNewAccountCreate MessageType = "new_account_create"
+	MsgNewAccountClose  MessageType = "new_account_close"
 	MsgNewBlock         MessageType = "new_block"
 	MsgGetBlocks        MessageType = "get_blocks"
 	MsgBlocksResponse   MessageType = "blocks_response"
@@ -40,6 +41,7 @@ type GetBlocks struct {
 type Handler interface {
 	OnNewTransaction(data json.RawMessage) error
 	OnNewAccountCreate(data json.RawMessage) error
+	OnNewAccountClose(data json.RawMessage) error
 	OnNewBlock(data json.RawMessage) error
 	OnGetBlocks(fromHeight int64) (json.RawMessage, error)
 	CurrentHeight() int64
@@ -193,6 +195,11 @@ func (n *Node) dispatch(msg Message, encoder *json.Encoder, inbound bool) error 
 	case MsgNewAccountCreate:
 		if err := n.handler.OnNewAccountCreate(msg.Payload); err != nil {
 			log.Printf("p2p ignore account create: %v", err)
+		}
+		return nil
+	case MsgNewAccountClose:
+		if err := n.handler.OnNewAccountClose(msg.Payload); err != nil {
+			log.Printf("p2p ignore account close: %v", err)
 		}
 		return nil
 	case MsgNewBlock:
