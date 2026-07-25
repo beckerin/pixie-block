@@ -16,18 +16,20 @@ type TxSubmitter interface {
 }
 
 type Server struct {
-	chain    *chain.Blockchain
-	mempool  *mempool.Pool
-	keystore config.Keystore
-	submit   TxSubmitter
+	chain            *chain.Blockchain
+	mempool          *mempool.Pool
+	keystore         config.Keystore
+	validatorPrivB64 string
+	submit           TxSubmitter
 }
 
-func NewServer(bc *chain.Blockchain, pool *mempool.Pool, keystore config.Keystore, submitter TxSubmitter) *Server {
+func NewServer(bc *chain.Blockchain, pool *mempool.Pool, keystore config.Keystore, validatorPrivB64 string, submitter TxSubmitter) *Server {
 	return &Server{
-		chain:    bc,
-		mempool:  pool,
-		keystore: keystore,
-		submit:   submitter,
+		chain:            bc,
+		mempool:          pool,
+		keystore:         keystore,
+		validatorPrivB64: validatorPrivB64,
+		submit:           submitter,
 	}
 }
 

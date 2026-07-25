@@ -23,9 +23,13 @@ func NewState(taxTreasury domain.AccountID, allowedTax []domain.AccountID, taxes
 	for _, id := range allowedTax {
 		allowed[id] = struct{}{}
 	}
+	taxSplit := make(map[domain.TaxCode]domain.TaxSplit, len(taxes.TaxSplit))
+	for code, split := range taxes.TaxSplit {
+		taxSplit[code] = split
+	}
 	return &State{
 		Accounts:         make(map[domain.AccountID]domain.Account),
-		TaxSplit:         taxes.TaxSplit,
+		TaxSplit:         taxSplit,
 		TaxTreasury:      taxTreasury,
 		AllowedTaxAccts:  allowed,
 		ValidatorPubKeys: make(map[string]ed25519.PublicKey),
@@ -43,9 +47,6 @@ func (s *State) Clone() *State {
 	}
 	for id, pk := range s.ValidatorPubKeys {
 		clone.ValidatorPubKeys[id] = pk
-	}
-	for taxCode, split := range s.TaxSplit {
-		clone.TaxSplit[taxCode] = split
 	}
 	if s.accountPubKeys != nil {
 		for id, pk := range s.accountPubKeys {

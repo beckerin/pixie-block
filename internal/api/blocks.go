@@ -11,7 +11,8 @@ func (s *Server) handleLatestBlock(w http.ResponseWriter, r *http.Request) {
 		methodNotAllowed(w)
 		return
 	}
-	writeJSON(w, http.StatusOK, s.chain.LatestBlock())
+	viewer := s.viewerFromRequest(r)
+	writeJSON(w, http.StatusOK, PresentBlock(s.chain.LatestBlock(), viewer, s.accountPubKeyB64))
 }
 
 func (s *Server) handlePreviousBlock(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +33,8 @@ func (s *Server) handlePreviousBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, block)
+	viewer := s.viewerFromRequest(r)
+	writeJSON(w, http.StatusOK, PresentBlock(block, viewer, s.accountPubKeyB64))
 }
 
 func (s *Server) handleBlockByHeight(w http.ResponseWriter, r *http.Request) {
@@ -63,5 +65,6 @@ func (s *Server) handleBlockByHeight(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, block)
+	viewer := s.viewerFromRequest(r)
+	writeJSON(w, http.StatusOK, PresentBlock(block, viewer, s.accountPubKeyB64))
 }

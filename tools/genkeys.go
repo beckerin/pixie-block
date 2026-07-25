@@ -34,7 +34,7 @@ func main() {
 	}
 	enc := base64.StdEncoding.EncodeToString
 
-	allowedTax := make([]string, 0, 28)
+	allowedTax := make([]string, 0, 2)
 	keystoreEntries := make([]map[string]string, 0)
 	for _, acct := range accounts {
 		if isTaxAccount(acct) {
@@ -56,7 +56,9 @@ func main() {
 
 	genesis := map[string]any{
 		"chain_id":             "pixie-net-1",
-		"block_time_seconds":   5,
+		"genesis_time":         "1970-01-01T00:00:00Z",
+		"block_time_seconds":   1,
+		"max_txs_per_block":    1000,
 		"tax_treasury":         "federal_treasury",
 		"allowed_tax_accounts": allowedTax,
 		"validators": []map[string]string{

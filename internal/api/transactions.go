@@ -39,13 +39,10 @@ func (s *Server) handleTransactions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.chain.ValidatePending(tx); err != nil {
+	if err := s.mempool.TryAdd(tx, func(reserved int64) error {
+		return s.chain.ValidateAdmit(tx, reserved)
+	}); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	if err := s.mempool.Add(tx); err != nil {
-		writeError(w, http.StatusConflict, err.Error())
 		return
 	}
 
@@ -127,7 +124,8 @@ func (s *Server) handleTransactionByID(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	writeJSON(w, http.StatusOK, tx)
+	viewer := s.viewerFromRequest(r)
+	writeJSON(w, http.StatusOK, PresentTx(tx, viewer, s.accountPubKeyB64))
 }
 
 func newTxID() string {

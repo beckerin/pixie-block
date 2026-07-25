@@ -1,10 +1,13 @@
 package config
 
 import (
+	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
+	"github.com/beckerin/pixie-block/internal/crypto"
 	"github.com/beckerin/pixie-block/internal/domain"
 )
 
@@ -35,7 +38,9 @@ type Taxes struct {
 
 type Genesis struct {
 	ChainID            string            `json:"chain_id"`
+	GenesisTime        time.Time         `json:"genesis_time"`
 	BlockTimeSeconds   int               `json:"block_time_seconds"`
+	MaxTxsPerBlock     int               `json:"max_txs_per_block"`
 	TaxTreasury        string            `json:"tax_treasury"`
 	AllowedTaxAccounts []string          `json:"allowed_tax_accounts"`
 	Validators         []ValidatorConfig `json:"validators"`
@@ -73,6 +78,12 @@ func LoadGenesis(path string) (Genesis, error) {
 	}
 	if len(genesis.AllowedTaxAccounts) == 0 {
 		genesis.AllowedTaxAccounts = []string{genesis.TaxTreasury}
+	}
+	if genesis.GenesisTime.IsZero() {
+		genesis.GenesisTime = time.Unix(0, 0).UTC()
+	}
+	if genesis.MaxTxsPerBlock <= 0 {
+		genesis.MaxTxsPerBlock = 100
 	}
 	return genesis, nil
 }
@@ -130,4 +141,43 @@ func (k Keystore) PrivateKeyFor(accountID string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// AccountIDForPrivateKey returns the account whose keystore private key matches privB64.
+func (k Keystore) AccountIDForPrivateKey(privB64 string) (string, bool) {
+	want, err := crypto.ParsePrivateKey(privB64)
+	if err != nil {
+		return "", false
+	}
+	wantPub := want.Public().(ed25519.PublicKey)
+	for _, entry := range k.Entries {
+		got, err := crypto.ParsePrivateKey(entry.PrivateKey)
+		if err != nil {
+			continue
+		}
+		gotPub := got.Public().(ed25519.PublicKey)
+		if string(gotPub) == string(wantPub) {
+			return entry.AccountID, true
+		}
+	}
+	return "", false
+}
+
+// SamePrivateKey reports whether two base64 private keys are the same keypair.
+func SamePrivateKey(a, b string) bool {
+	if a == "" || b == "" {
+		return false
+	}
+	if a == b {
+		return true
+	}
+	ka, err := crypto.ParsePrivateKey(a)
+	if err != nil {
+		return false
+	}
+	kb, err := crypto.ParsePrivateKey(b)
+	if err != nil {
+		return false
+	}
+	return string(ka.Public().(ed25519.PublicKey)) == string(kb.Public().(ed25519.PublicKey))
 }

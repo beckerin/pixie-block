@@ -42,7 +42,11 @@ func Accounts(accounts []domain.Account) string {
 }
 
 func BlockJSON(block domain.Block) string {
-	b, err := json.MarshalIndent(block, "", "  ")
+	return AnyJSON(block)
+}
+
+func AnyJSON(v any) string {
+	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return "erro ao serializar bloco"
 	}
@@ -57,6 +61,16 @@ func PreviousBlock(latestHeight int64, previous domain.Block, found bool) string
 		return "bloco anterior não encontrado"
 	}
 	return BlockJSON(previous)
+}
+
+func PreviousBlockText(latestHeight int64, found bool, presentedJSON string) string {
+	if latestHeight <= 0 {
+		return "nenhum bloco anterior"
+	}
+	if !found {
+		return "bloco anterior não encontrado"
+	}
+	return presentedJSON
 }
 
 func formatMoney(balance int64, currency string) string {

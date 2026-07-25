@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Gera transações aleatórias contra a API do pixie-block.
 # Usa saldos ao vivo de /v1/accounts e só gasta o que o pagador ainda tem
-# (evita falha no bloco: ValidatePending não enxerga o mempool).
+# (evita falha no bloco: ValidateAdmit / reservas do mempool).
+#
+# Para benchmarks de alta taxa (~1000 tx/s), use o loadgen paralelo:
+#   go run ./tools/loadgen -api http://127.0.0.1:80 -n 5000 -workers 64
 #
 # Uso:
 #   ./tools/random-txs.sh
@@ -14,8 +17,8 @@ API_URL="${API_URL:-http://127.0.0.1:80}"
 COUNT="${COUNT:-200}"
 MAX_AMOUNT="${MAX_AMOUNT:-5000}"   # centavos (R$ 50,00)
 MIN_AMOUNT="${MIN_AMOUNT:-50}"     # centavos (R$ 0,50)
-BATCH_SIZE="${BATCH_SIZE:-80}"     # pausa entre lotes (mempool Peek=100)
-BATCH_SLEEP="${BATCH_SLEEP:-6}"    # segundos (block_time ~= 5s)
+BATCH_SIZE="${BATCH_SIZE:-1000}"   # pausa entre lotes (max_txs_per_block)
+BATCH_SLEEP="${BATCH_SLEEP:-1}"    # segundos (block_time ~= 1s)
 DRY_RUN=0
 
 DESCRIPTIONS=(
@@ -249,7 +252,7 @@ while [[ "$ok" -lt "$COUNT" && "$attempt" -lt "$max_attempts" ]]; do
     fi
   fi
 
-  # deixa o validador incluir lotes (Peek até 100 por bloco)
+  # deixa o validador incluir lotes (até max_txs_per_block por bloco)
   if [[ "$DRY_RUN" -eq 0 && "$ok" -gt 0 && $((ok % BATCH_SIZE)) -eq 0 && "$ok" -lt "$COUNT" ]]; then
     echo "... pausa ${BATCH_SLEEP}s para produção de bloco (ok=${ok})"
     sleep "$BATCH_SLEEP"

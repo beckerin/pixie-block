@@ -24,19 +24,22 @@ type Store struct {
 	db *bolt.DB
 }
 
-func Open(dataDir string, log *log.Logger) (*Store, error) {
+func Open(dataDir string, logger *log.Logger, noSync bool) (*Store, error) {
 	if err := os.MkdirAll(dataDir, 0o755); err != nil {
 		return nil, fmt.Errorf("create data dir: %w", err)
-	} else {
-		log.Printf("Opening store: %s", dataDir)
+	}
+	logger.Printf("Opening store: %s (nosync=%v)", dataDir, noSync)
+
+	opts := &bolt.Options{}
+	if noSync {
+		opts.NoSync = true
 	}
 
-	db, err := bolt.Open(filepath.Join(dataDir, "pixie.db"), 0o600, nil)
+	db, err := bolt.Open(filepath.Join(dataDir, "pixie.db"), 0o600, opts)
 	if err != nil {
 		return nil, fmt.Errorf("open db: %w", err)
-	} else {
-		log.Printf("Store opened successfully")
 	}
+	logger.Printf("Store opened successfully")
 
 	store := &Store{db: db}
 	if err := store.db.Update(func(tx *bolt.Tx) error {
@@ -69,6 +72,27 @@ func (s *Store) SaveBlock(block domain.Block) error {
 		bucket := tx.Bucket([]byte(blocksBucket))
 		key := fmt.Sprintf("%020d", block.Height)
 		return bucket.Put([]byte(key), data)
+	})
+}
+
+// SaveBlockAndState persists block and ledger state in a single Bolt transaction.
+func (s *Store) SaveBlockAndState(block domain.Block, state *ledger.State) error {
+	blockData, err := json.Marshal(block)
+	if err != nil {
+		return err
+	}
+	stateData, err := marshalState(state)
+	if err != nil {
+		return err
+	}
+
+	return s.db.Update(func(tx *bolt.Tx) error {
+		blocks := tx.Bucket([]byte(blocksBucket))
+		key := fmt.Sprintf("%020d", block.Height)
+		if err := blocks.Put([]byte(key), blockData); err != nil {
+			return err
+		}
+		return tx.Bucket([]byte(stateBucket)).Put([]byte(stateKey), stateData)
 	})
 }
 
@@ -109,7 +133,7 @@ type persistedState struct {
 	Taxes           config.Taxes                        `json:"taxes"`
 }
 
-func (s *Store) SaveState(state *ledger.State) error {
+func marshalState(state *ledger.State) ([]byte, error) {
 	allowed := make([]domain.AccountID, 0, len(state.AllowedTaxAccts))
 	for id := range state.AllowedTaxAccts {
 		allowed = append(allowed, id)
@@ -121,8 +145,11 @@ func (s *Store) SaveState(state *ledger.State) error {
 		AllowedTaxAccts: allowed,
 		Taxes:           config.Taxes{TaxSplit: state.TaxSplit},
 	}
+	return json.Marshal(payload)
+}
 
-	data, err := json.Marshal(payload)
+func (s *Store) SaveState(state *ledger.State) error {
+	data, err := marshalState(state)
 	if err != nil {
 		return err
 	}

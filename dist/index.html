@@ -63,6 +63,85 @@
         el.className = 'mt-3 font-mono text-sm text-ember';
       }
     }
+
+    function chainSSEUrl(pkey) {
+      const key = (pkey || '').trim();
+      if (!key) return '/v1/chain';
+      return '/v1/chain?pkey=' + encodeURIComponent(key);
+    }
+
+    function setViewerStatus(pkey) {
+      const el = document.getElementById('viewer-status');
+      if (!el) return;
+      if ((pkey || '').trim()) {
+        el.textContent = 'identificado';
+        el.className = 'shrink-0 font-mono text-[10px] uppercase tracking-wider text-tide';
+      } else {
+        el.textContent = 'anônimo';
+        el.className = 'shrink-0 font-mono text-[10px] uppercase tracking-wider text-ink/40';
+      }
+    }
+
+    // Reconecta o SSE com ?pkey= (EventSource não envia headers).
+    // O #pkey-wrap é movido para fora antes do clone para preservar foco/valor.
+    function reconnectChainSSE(pkey) {
+      const root = document.getElementById('sse-root');
+      if (!root) return;
+      const url = chainSSEUrl(pkey);
+      if (root.getAttribute('sse-connect') === url) {
+        setViewerStatus(pkey);
+        return;
+      }
+
+      const pkeyWrap = document.getElementById('pkey-wrap');
+      const input = document.getElementById('pkey-input');
+      const hadFocus = document.activeElement === input;
+      const selStart = input ? input.selectionStart : null;
+      const selEnd = input ? input.selectionEnd : null;
+      if (pkeyWrap) document.body.appendChild(pkeyWrap);
+
+      const parent = root.parentNode;
+      const next = root.nextSibling;
+      const clone = root.cloneNode(true);
+      clone.setAttribute('sse-connect', url);
+      root.remove();
+      parent.insertBefore(clone, next);
+
+      const mount = clone.querySelector('#pkey-mount');
+      if (mount && pkeyWrap) mount.appendChild(pkeyWrap);
+      htmx.process(clone);
+      setViewerStatus(pkey);
+
+      if (hadFocus && input) {
+        input.focus();
+        if (selStart != null && selEnd != null) {
+          try { input.setSelectionRange(selStart, selEnd); } catch (_) {}
+        }
+      }
+    }
+
+    let pkeyTimer = null;
+    function onPKeyInput() {
+      const pkey = document.getElementById('pkey-input').value;
+      clearTimeout(pkeyTimer);
+      pkeyTimer = setTimeout(() => reconnectChainSSE(pkey), 400);
+    }
+
+    function onPKeyKeydown(evt) {
+      if (evt.key === 'Enter') {
+        evt.preventDefault();
+        clearTimeout(pkeyTimer);
+        reconnectChainSSE(evt.target.value);
+      }
+    }
+
+    function clearPKey() {
+      const input = document.getElementById('pkey-input');
+      input.value = '';
+      clearTimeout(pkeyTimer);
+      reconnectChainSSE('');
+      input.focus();
+    }
   </script>
   <style>
     body {
@@ -85,8 +164,8 @@
     }
   </style>
 </head>
-<body class="text-ink antialiased" hx-ext="sse" sse-connect="/v1/chain">
-  <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+<body class="text-ink antialiased">
+  <div id="sse-root" class="mx-auto max-w-12xl px-4 py-10 sm:px-6" hx-ext="sse" sse-connect="/v1/chain">
     <header class="mb-10">
       <p class="font-display text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
         Pixie Block
@@ -94,14 +173,45 @@
       <p class="mt-2 max-w-xl text-base text-ink/60">
         Explorer da chain — bloco anterior, bloco atual e saldos das contas.
       </p>
-      <div
-        id="chain-info"
-        class="mt-4 inline-flex items-center gap-2 rounded-full border border-ink/10 bg-white/60 px-3 py-1 font-mono text-xs text-ink/70"
-      >
-        <span sse-swap="ChainInfo" class="inline-flex items-center gap-2">
-          <span class="h-1.5 w-1.5 rounded-full bg-tide"></span>
-          <span data-chain>carregando…</span>
-        </span>
+      <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div
+          id="chain-info"
+          class="inline-flex items-center gap-2 rounded-full border border-ink/10 bg-white/60 px-3 py-1 font-mono text-xs text-ink/70"
+        >
+          <span sse-swap="ChainInfo" class="inline-flex items-center gap-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-tide"></span>
+            <span data-chain>carregando…</span>
+          </span>
+        </div>
+        <div id="pkey-mount" class="min-w-0 flex-1">
+          <div
+            id="pkey-wrap"
+            class="flex min-w-0 items-center gap-2 rounded-full border border-ink/10 bg-white/60 px-3 py-1"
+          >
+            <label for="pkey-input" class="shrink-0 font-mono text-[10px] uppercase tracking-wider text-ink/40">
+              pkey
+            </label>
+            <input
+              id="pkey-input"
+              type="password"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="chave privada (vazio = anônimo)"
+              class="min-w-0 flex-1 bg-transparent font-mono text-xs text-ink outline-none placeholder:text-ink/30"
+              oninput="onPKeyInput()"
+              onkeydown="onPKeyKeydown(event)"
+            />
+            <span id="viewer-status" class="shrink-0 font-mono text-[10px] uppercase tracking-wider text-ink/40">anônimo</span>
+            <button
+              type="button"
+              onclick="clearPKey()"
+              class="shrink-0 font-mono text-[10px] uppercase tracking-wider text-ink/40 transition hover:text-ember"
+              title="Limpar chave e voltar ao anônimo"
+            >
+              limpar
+            </button>
+          </div>
+        </div>
       </div>
     </header>
 

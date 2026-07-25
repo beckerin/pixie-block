@@ -20,6 +20,16 @@ func init() {
 	merchantPub, merchantPriv, _ = ed25519.GenerateKey(nil)
 }
 
+func TestCloneDoesNotShareTaxSplitMap(t *testing.T) {
+	state := newTestState(t)
+	clone := state.Clone()
+
+	clone.TaxSplit["ICMS"] = domain.TaxSplit{RateBPS: 1, TaxAccount: "tax_treasury"}
+	if state.TaxSplit["ICMS"].RateBPS == 1 {
+		t.Fatal("Clone shared TaxSplit map with parent")
+	}
+}
+
 func TestApplyTransactionWithTaxAndDiscount(t *testing.T) {
 	state := newTestState(t)
 

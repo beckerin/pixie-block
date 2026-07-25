@@ -17,6 +17,8 @@ func (s *Server) handleChain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	viewer := s.viewerFromRequest(r)
+
 	conn, err := sse.Upgrade(r.Context(), w)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
@@ -48,13 +50,18 @@ func (s *Server) handleChain(w http.ResponseWriter, r *http.Request) {
 		if err := send("ChainInfo", id, template.ChainInfo(s.chain.ChainInfo())); err != nil {
 			return err
 		}
-		if err := send("LatestBlock", id, template.BlockJSON(s.chain.LatestBlock())); err != nil {
+
+		latest := s.chain.LatestBlock()
+		if err := send("LatestBlock", id, template.AnyJSON(PresentBlock(latest, viewer, s.accountPubKeyB64))); err != nil {
 			return err
 		}
 
-		latest := s.chain.LatestBlock()
 		previous, found := s.chain.GetBlock(latest.Height - 1)
-		if err := send("PreviousBlock", id, template.PreviousBlock(latest.Height, previous, found)); err != nil {
+		prevPayload := ""
+		if latest.Height > 0 && found {
+			prevPayload = template.AnyJSON(PresentBlock(previous, viewer, s.accountPubKeyB64))
+		}
+		if err := send("PreviousBlock", id, template.PreviousBlockText(latest.Height, found, prevPayload)); err != nil {
 			return err
 		}
 		return send("Accounts", id, template.Accounts(s.listAccounts()))

@@ -2,13 +2,19 @@ package p2p
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/beckerin/pixie-block/internal/chain"
 	"github.com/beckerin/pixie-block/internal/domain"
+	"github.com/beckerin/pixie-block/internal/ledger"
 	"github.com/beckerin/pixie-block/internal/mempool"
 )
+
+// ErrNeedSync is returned when a peer announces a block beyond the next height.
+var ErrNeedSync = errors.New("need chain sync")
 
 type Bridge struct {
 	chainID  string
@@ -59,10 +65,9 @@ func (b *Bridge) OnNewTransaction(data json.RawMessage) error {
 	if err := json.Unmarshal(data, &tx); err != nil {
 		return err
 	}
-	if err := b.chain.ValidatePending(tx); err != nil {
-		return err
-	}
-	return b.mempool.Add(tx)
+	return b.mempool.TryAdd(tx, func(reserved int64) error {
+		return b.chain.ValidateAdmit(tx, reserved)
+	})
 }
 
 func (b *Bridge) OnNewBlock(data json.RawMessage) error {
@@ -103,21 +108,27 @@ func (b *Bridge) applyBlocks(blocks []domain.Block) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
+	applied := 0
 	for _, block := range blocks {
 		if block.Height <= b.chain.Height() {
 			continue
 		}
-		if block.Height != b.chain.Height()+1 {
-			return fmt.Errorf("out of order block at height %d", block.Height)
-		}
-		if err := b.chain.AppendBlock(block); err != nil {
-			return err
+		if block.Height > b.chain.Height()+1 {
+			return fmt.Errorf("%w: got height %d, local %d", ErrNeedSync, block.Height, b.chain.Height())
 		}
 		ids := make([]string, len(block.Transactions))
 		for i, tx := range block.Transactions {
 			ids[i] = tx.ID
 		}
-		b.mempool.Remove(ids...)
+		if err := b.mempool.Commit(ids, func() error {
+			return b.chain.AppendBlock(block)
+		}); err != nil {
+			return err
+		}
+		applied++
+	}
+	if applied > 0 {
+		log.Printf("p2p applied %d block(s), height now %d", applied, b.chain.Height())
 	}
 	return nil
 }
@@ -132,7 +143,11 @@ func (b *Bridge) ProduceBlockIfReady() (domain.Block, bool, error) {
 		return domain.Block{}, false, nil
 	}
 
-	txs := b.mempool.Peek(100)
+	maxTxs := b.chain.Genesis().MaxTxsPerBlock
+	if maxTxs <= 0 {
+		maxTxs = 100
+	}
+	txs := b.selectExecutableTxs(maxTxs)
 	if len(txs) == 0 {
 		return domain.Block{}, false, nil
 	}
@@ -143,16 +158,46 @@ func (b *Bridge) ProduceBlockIfReady() (domain.Block, bool, error) {
 		return domain.Block{}, false, err
 	}
 
-	if err := b.chain.AppendBlock(block); err != nil {
-		return domain.Block{}, false, err
-	}
-
 	ids := make([]string, len(txs))
 	for i, tx := range txs {
 		ids[i] = tx.ID
 	}
-	b.mempool.Remove(ids...)
+	if err := b.mempool.Commit(ids, func() error {
+		return b.chain.AppendBlock(block)
+	}); err != nil {
+		return domain.Block{}, false, err
+	}
 
 	b.BroadcastBlock(block)
 	return block, true, nil
+}
+
+// selectExecutableTxs picks up to max txs that apply cleanly in order against
+// confirmed state, and drops mempool entries that are no longer executable.
+func (b *Bridge) selectExecutableTxs(max int) []domain.PaymentTransaction {
+	candidates := b.mempool.Peek(0)
+	if len(candidates) == 0 {
+		return nil
+	}
+
+	state := b.chain.State()
+	selected := make([]domain.PaymentTransaction, 0, max)
+	var drop []string
+
+	for _, tx := range candidates {
+		if len(selected) >= max {
+			break
+		}
+		if err := ledger.ApplyTransaction(tx, state); err != nil {
+			drop = append(drop, tx.ID)
+			log.Printf("dropping invalid mempool tx %s: %v", tx.ID, err)
+			continue
+		}
+		selected = append(selected, tx)
+	}
+
+	if len(drop) > 0 {
+		b.mempool.Remove(drop...)
+	}
+	return selected
 }

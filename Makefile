@@ -20,16 +20,19 @@ run: build
 	./main \
 		--data-dir ./data/node1 \
 		--api-addr :80 \
-		--p2p-listen :9000 \
-		--node-id node-1
+		--p2p-listen :90 \
+		--node-id node-1 \
+		--bolt-nosync
 
 run-node2: build
 	./main \
 		--data-dir ./data/node2 \
 		--api-addr :81 \
-		--p2p-listen :9001 \
+		--p2p-listen :91 \
 		--node-id node-2 \
-		--peer 127.0.0.1:9000
+		--validator-key "" \
+		--peer 127.0.0.1:90 \
+		--bolt-nosync
 
 run-cluster:
 	@echo "Starting node 1 in background..."

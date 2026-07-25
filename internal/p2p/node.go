@@ -2,8 +2,10 @@ package p2p
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"sync"
 	"time"
@@ -93,8 +95,10 @@ func (n *Node) dial(addr string) {
 			time.Sleep(3 * time.Second)
 			continue
 		}
+		log.Printf("p2p connected to %s", addr)
 		n.handleConn(conn, false)
-		return
+		log.Printf("p2p disconnected from %s, reconnecting", addr)
+		time.Sleep(3 * time.Second)
 	}
 }
 
@@ -138,7 +142,8 @@ func (n *Node) handleConn(conn net.Conn, inbound bool) {
 			return
 		}
 
-		if err := n.dispatch(msg, encoder); err != nil {
+		if err := n.dispatch(msg, encoder, inbound); err != nil {
+			log.Printf("p2p dispatch error from %s: %v", addr, err)
 			return
 		}
 	}
@@ -156,7 +161,7 @@ func (n *Node) sendHandshake(encoder *json.Encoder) error {
 	return encoder.Encode(Message{Type: MsgHandshake, Payload: payload})
 }
 
-func (n *Node) dispatch(msg Message, encoder *json.Encoder) error {
+func (n *Node) dispatch(msg Message, encoder *json.Encoder, inbound bool) error {
 	switch msg.Type {
 	case MsgHandshake:
 		var hs Handshake
@@ -166,14 +171,32 @@ func (n *Node) dispatch(msg Message, encoder *json.Encoder) error {
 		if hs.ChainID != n.handler.ChainID() {
 			return fmt.Errorf("chain id mismatch")
 		}
+		// Listener replies so the dialer learns our height and can catch up.
+		if inbound {
+			if err := n.sendHandshake(encoder); err != nil {
+				return err
+			}
+		}
 		if hs.Height > n.handler.CurrentHeight() {
+			log.Printf("p2p peer %s ahead (remote=%d local=%d), requesting sync", hs.NodeID, hs.Height, n.handler.CurrentHeight())
 			return n.requestSync(encoder, n.handler.CurrentHeight()+1)
 		}
 		return nil
 	case MsgNewTransaction:
-		return n.handler.OnNewTransaction(msg.Payload)
+		// Gossip validation failures must not drop the peer.
+		if err := n.handler.OnNewTransaction(msg.Payload); err != nil {
+			log.Printf("p2p ignore transaction: %v", err)
+		}
+		return nil
 	case MsgNewBlock:
-		return n.handler.OnNewBlock(msg.Payload)
+		if err := n.handler.OnNewBlock(msg.Payload); err != nil {
+			if errors.Is(err, ErrNeedSync) {
+				log.Printf("p2p out-of-order block, requesting sync from height %d", n.handler.CurrentHeight()+1)
+				return n.requestSync(encoder, n.handler.CurrentHeight()+1)
+			}
+			log.Printf("p2p ignore block: %v", err)
+		}
+		return nil
 	case MsgGetBlocks:
 		var req GetBlocks
 		if err := json.Unmarshal(msg.Payload, &req); err != nil {
@@ -185,7 +208,10 @@ func (n *Node) dispatch(msg Message, encoder *json.Encoder) error {
 		}
 		return encoder.Encode(Message{Type: MsgBlocksResponse, Payload: resp})
 	case MsgBlocksResponse:
-		return n.handler.OnNewBlock(msg.Payload)
+		if err := n.handler.OnNewBlock(msg.Payload); err != nil {
+			log.Printf("p2p sync apply error: %v", err)
+		}
+		return nil
 	default:
 		return nil
 	}

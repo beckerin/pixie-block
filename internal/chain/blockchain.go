@@ -80,9 +80,14 @@ func New(genesis config.Genesis, store *bolt.Store, state *ledger.State, keystor
 }
 
 func buildGenesisBlock(genesis config.Genesis) (domain.Block, error) {
+	// Fixed timestamp so every node derives the same genesis hash.
+	ts := genesis.GenesisTime
+	if ts.IsZero() {
+		ts = time.Unix(0, 0).UTC()
+	}
 	block := domain.Block{
 		Height:       0,
-		Timestamp:    time.Now().UTC(),
+		Timestamp:    ts,
 		Transactions: nil,
 		PreviousHash: nil,
 		Validator:    genesis.Validators[0].ID,
@@ -218,9 +223,36 @@ func (bc *Blockchain) ChainInfo() domain.ChainInfo {
 }
 
 func (bc *Blockchain) ValidatePending(tx domain.PaymentTransaction) error {
+	return bc.ValidateAdmit(tx, 0)
+}
+
+// ValidateAdmit checks tx against confirmed state after subtracting reservedGross
+// already held in the mempool for the payer (O(1) vs reapplying pending).
+func (bc *Blockchain) ValidateAdmit(tx domain.PaymentTransaction, reservedGross int64) error {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
-	return ledger.ValidateTransaction(tx, bc.state)
+
+	state := bc.state.Clone()
+	if acct, ok := state.Accounts[tx.Payer.ID]; ok {
+		acct.Balance -= reservedGross
+		state.Accounts[tx.Payer.ID] = acct
+	}
+	return ledger.ValidateTransaction(tx, state)
+}
+
+// ValidatePendingWith checks tx against confirmed state after applying pending spends in order.
+// Prefer ValidateAdmit for the hot admit path.
+func (bc *Blockchain) ValidatePendingWith(tx domain.PaymentTransaction, pending []domain.PaymentTransaction) error {
+	bc.mu.RLock()
+	defer bc.mu.RUnlock()
+
+	state := bc.state.Clone()
+	for _, p := range pending {
+		if err := ledger.ApplyTransaction(p, state); err != nil {
+			continue
+		}
+	}
+	return ledger.ValidateTransaction(tx, state)
 }
 
 func (bc *Blockchain) AppendBlock(block domain.Block) error {
@@ -233,10 +265,7 @@ func (bc *Blockchain) AppendBlock(block domain.Block) error {
 		return err
 	}
 
-	if err := bc.store.SaveBlock(block); err != nil {
-		return err
-	}
-	if err := bc.store.SaveState(nextState); err != nil {
+	if err := bc.store.SaveBlockAndState(block, nextState); err != nil {
 		return err
 	}
 
