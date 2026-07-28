@@ -1,0 +1,458 @@
+openapi: 3.0.3
+info:
+  title: Pixie Block API
+  version: 1.0.0
+  description: |
+    API HTTP do ledger Pixie Block (PoA).
+
+    **Viewer**: envie `X-Private-Key` ou `?pkey=` (base64 Ed25519) para visão completa
+    de blocos/TXs quando for parte ou audit (chave do validador).
+
+    **SSE**: `GET /v1/chain` é `text/event-stream` (não use "Try it" para streams longos).
+    Eventos: `ChainInfo`, `LatestBlock`, `PreviousBlock`, `ViewerPanel`, `Balance`.
+
+    Valores monetários em **centavos** (inteiros).
+  contact:
+    name: beckerin
+servers:
+  - url: /
+    description: Nó local
+tags:
+  - name: Health
+  - name: Chain
+  - name: Transactions
+  - name: Blocks
+  - name: Accounts
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Liveness
+      operationId: getHealth
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /v1/chain:
+    get:
+      tags: [Chain]
+      summary: SSE da chain (explorer)
+      operationId: getChainSSE
+      description: |
+        Stream SSE. Reenvia eventos quando o height muda (~1s poll).
+
+        | Event | Conteúdo |
+        |-------|----------|
+        | ChainInfo | HTML chain id + height |
+        | LatestBlock | JSON do bloco (redigido por viewer) |
+        | PreviousBlock | JSON height-1 ou texto |
+        | ViewerPanel | HTML painel de ações |
+        | Balance | HTML saldo / lista audit |
+      parameters:
+        - $ref: '#/components/parameters/PKeyQuery'
+      responses:
+        '200':
+          description: text/event-stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  /v1/transactions:
+    post:
+      tags: [Transactions]
+      summary: Submeter payment
+      operationId: createTransaction
+      description: |
+        Assina com a chave do payer no keystore local do nó.
+        Impostos via `items[].tax_codes` → `config/taxes.json`.
+        Payee `person` não pode ter tax_codes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitTxRequest'
+            example:
+              payer: merchant_001
+              payee: person_001
+              items:
+                - description: Pagamento
+                  amount: 1000
+                  tax_codes: []
+      responses:
+        '201':
+          description: Transação admitida no mempool
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentTransaction'
+        '400':
+          $ref: '#/components/responses/Error'
+
+  /v1/transactions/{id}:
+    get:
+      tags: [Transactions]
+      summary: Obter transação
+      operationId: getTransaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/PKeyQuery'
+        - $ref: '#/components/parameters/PrivateKeyHeader'
+      responses:
+        '200':
+          description: TX no chain ou mempool (possivelmente redigida)
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          $ref: '#/components/responses/Error'
+
+  /v1/blocks/latest:
+    get:
+      tags: [Blocks]
+      summary: Último bloco
+      operationId: getLatestBlock
+      parameters:
+        - $ref: '#/components/parameters/PKeyQuery'
+        - $ref: '#/components/parameters/PrivateKeyHeader'
+      responses:
+        '200':
+          description: Bloco atual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Block'
+
+  /v1/blocks/previous:
+    get:
+      tags: [Blocks]
+      summary: Bloco anterior
+      operationId: getPreviousBlock
+      parameters:
+        - $ref: '#/components/parameters/PKeyQuery'
+        - $ref: '#/components/parameters/PrivateKeyHeader'
+      responses:
+        '200':
+          description: height - 1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Block'
+        '404':
+          $ref: '#/components/responses/Error'
+
+  /v1/blocks/{height}:
+    get:
+      tags: [Blocks]
+      summary: Bloco por altura
+      operationId: getBlockByHeight
+      parameters:
+        - name: height
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - $ref: '#/components/parameters/PKeyQuery'
+        - $ref: '#/components/parameters/PrivateKeyHeader'
+      responses:
+        '200':
+          description: Bloco
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Block'
+        '404':
+          $ref: '#/components/responses/Error'
+
+  /v1/accounts:
+    get:
+      tags: [Accounts]
+      summary: Listar contas
+      operationId: listAccounts
+      responses:
+        '200':
+          description: Contas ordenadas por id
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+    post:
+      tags: [Accounts]
+      summary: Criar conta
+      operationId: createAccount
+      description: |
+        Somente nó produtor (validator). Gera keypair, assina create, mempool + keystore.
+        Retorna `private_key` uma vez.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountRequest'
+            example:
+              id: person_005
+              type: person
+      responses:
+        '201':
+          description: Conta enfileirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAccountResponse'
+        '400':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+
+  /v1/accounts/{id}/balance:
+    get:
+      tags: [Accounts]
+      summary: Saldo de uma conta
+      operationId: getAccountBalance
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Conta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '404':
+          $ref: '#/components/responses/Error'
+
+  /v1/accounts/{id}:
+    delete:
+      tags: [Accounts]
+      summary: Encerrar conta
+      operationId: closeAccount
+      description: |
+        **person**: nó validador; destination opcional (saldo residual).
+        **merchant**: `X-Private-Key` da conta; saldo deve ser 0.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/PKeyQuery'
+        - $ref: '#/components/parameters/PrivateKeyHeader'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloseAccountRequest'
+      responses:
+        '200':
+          description: Close enfileirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CloseAccountResponse'
+        '400':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+
+components:
+  parameters:
+    PKeyQuery:
+      name: pkey
+      in: query
+      required: false
+      description: Chave privada base64 (viewer). Preferível para SSE.
+      schema:
+        type: string
+    PrivateKeyHeader:
+      name: X-Private-Key
+      in: header
+      required: false
+      description: Chave privada base64 (viewer / merchant close).
+      schema:
+        type: string
+
+  responses:
+    Error:
+      description: Erro
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+    AccountType:
+      type: string
+      enum: [person, merchant, treasury]
+
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/AccountType'
+        balance:
+          type: integer
+          format: int64
+          description: Centavos
+
+    LineItem:
+      type: object
+      required: [description, amount]
+      properties:
+        description:
+          type: string
+        amount:
+          type: integer
+          format: int64
+        tax_codes:
+          type: array
+          items:
+            type: string
+        discounts:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+              amount:
+                type: integer
+                format: int64
+              tax_account:
+                type: string
+
+    SubmitTxRequest:
+      type: object
+      required: [payer, payee, items]
+      properties:
+        payer:
+          type: string
+        payee:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItem'
+
+    PaymentTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        payer:
+          $ref: '#/components/schemas/Account'
+        payee:
+          $ref: '#/components/schemas/Account'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItem'
+        signature:
+          type: string
+
+    Block:
+      type: object
+      properties:
+        height:
+          type: integer
+          format: int64
+        timestamp:
+          type: string
+          format: date-time
+        transactions:
+          type: array
+          items:
+            type: object
+        account_creates:
+          type: array
+          items:
+            type: object
+        account_closes:
+          type: array
+          items:
+            type: object
+        previous_hash:
+          type: string
+          nullable: true
+        hash:
+          type: string
+        validator:
+          type: string
+
+    CreateAccountRequest:
+      type: object
+      required: [id, type]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [person, merchant]
+
+    CreateAccountResponse:
+      type: object
+      properties:
+        account:
+          $ref: '#/components/schemas/Account'
+        public_key:
+          type: string
+        private_key:
+          type: string
+        tx_id:
+          type: string
+
+    CloseAccountRequest:
+      type: object
+      properties:
+        destination:
+          type: string
+          description: Só person; omitido → treasury padrão
+
+    CloseAccountResponse:
+      type: object
+      properties:
+        tx_id:
+          type: string
+        account_id:
+          type: string
+        destination:
+          type: string
+        transferred:
+          type: integer
+          format: int64

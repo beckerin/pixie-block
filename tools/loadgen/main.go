@@ -53,19 +53,12 @@ var taxOptions = [][]string{
 	{"IBS"},
 	{"CBS"},
 	{"IBS", "CBS"},
-	{"FGTS"},
-	{"IRRF"},
 }
 
 // Matches config/taxes.json — used to credit net-to-payee locally.
 var taxRateBPS = map[string]int64{
-	"IBS":              1700,
-	"CBS":              1100,
-	"INSS-PATRONAL":    2000,
-	"INSS-FUNCIONARIO": 2000,
-	"IRRF":             1500,
-	"FGTS":             800,
-	"RAT":              1500,
+	"IBS": 1700,
+	"CBS": 1100,
 }
 
 func main() {

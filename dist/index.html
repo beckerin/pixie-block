@@ -41,7 +41,7 @@
       },
     });
 
-    let sessionPKey = '';
+    let sessionPKey = cookieStore.get('pkey')?.value || '';
 
     function chainSSEUrl(pkey) {
       const key = (pkey || '').trim();
@@ -126,11 +126,13 @@
       const pkey = input ? input.value : '';
       if (!(pkey || '').trim()) return;
       reconnectChainSSE(pkey);
+      cookieStore.set('pkey', pkey);
     }
 
     function logout(evt) {
       if (evt) evt.stopPropagation();
       reconnectChainSSE('');
+      cookieStore.delete('pkey');
     }
 
     document.addEventListener('click', (e) => {
@@ -215,10 +217,11 @@
       const payer = (document.getElementById('tx-payer') || {}).value || '';
       const payee = (document.getElementById('tx-payee') || {}).value || '';
       const amount = parseInt((document.getElementById('tx-amount') || {}).value || '0', 10);
+      const detail = (document.getElementById('tx-payee') || {}).value || '';
       btn.setAttribute('hx-json', JSON.stringify({
         payer: payer.trim(),
         payee: payee.trim(),
-        items: [{ description: 'Pagamento', amount: amount, tax_codes: [] }],
+        items: [{ description, amount }],
       }));
     }
 
@@ -243,13 +246,12 @@
       }
     }
 
-    document.body.addEventListener('htmx:afterSwap', (evt) => {
-      const target = evt.detail && evt.detail.target;
-      if (!target) return;
-      if (target.id === 'viewer-panel') {
-        htmx.process(target);
-        toggleCloseDestination();
-      }
+    document.addEventListener('DOMContentLoaded', () => {
+      document.cookie.split(';').forEach(cookie => {
+        if (cookie.trim().startsWith('pkey=')) {
+          reconnectChainSSE(cookie.trim().replace('pkey=', ''));
+        } 
+      });
     });
   </script>
   <style>
@@ -283,6 +285,7 @@
           </p>
           <p class="mt-2 max-w-xl text-base text-ink/60">
             Explorer da chain — blocos e ações autenticadas.
+            <a href="/v1/docs/" class="ml-1 font-medium text-tide underline-offset-2 hover:underline">Docs</a>
           </p>
         </div>
         <div id="auth-mount" class="relative shrink-0 pt-1">

@@ -1,4 +1,4 @@
-.PHONY: build test genkeys run run-node2 run-cluster clean
+.PHONY: build test genkeys run run-node2 run-cluster clean docker-build docker-up docker-down docker-logs docker-ps docker-scale docker-load
 
 build:
 	go build -o main ./cmd/server
@@ -43,3 +43,28 @@ run-cluster:
 
 clean:
 	rm -rf bin data
+
+COMPOSE ?= docker compose
+PIXIE_URL ?= http://127.0.0.1
+
+docker-build:
+	$(COMPOSE) build
+
+docker-up:
+	$(COMPOSE) up -d --build
+
+docker-down:
+	$(COMPOSE) down
+
+docker-logs:
+	$(COMPOSE) logs -f --tail=100
+
+docker-ps:
+	$(COMPOSE) ps
+
+docker-scale:
+	@test -n "$(N)" || (echo "usage: make docker-scale N=3" && exit 1)
+	$(COMPOSE) up -d --no-recreate --scale follower=$(N)
+
+docker-load:
+	go run ./tools/loadgen/... -api $(PIXIE_URL) -n $(or $(N),500) -workers $(or $(WORKERS),16)

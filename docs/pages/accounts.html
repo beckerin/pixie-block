@@ -1,0 +1,58 @@
+<h1>Contas</h1>
+<p class="lead">Três tipos on-chain: person, merchant e treasury. Criação e encerramento seguem regras distintas.</p>
+
+<h2>Tipos</h2>
+<table>
+  <thead>
+    <tr><th>Type</th><th>Significado</th><th>Notas</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>person</code></td><td>Pessoa física</td><td>Payee não pode receber <code>tax_codes</code></td></tr>
+    <tr><td><code>merchant</code></td><td>Pessoa jurídica</td><td>Pode pagar/receber com impostos do genesis</td></tr>
+    <tr><td><code>treasury</code></td><td>Órgão fiscal</td><td>Destino de splits; não se encerra via API</td></tr>
+  </tbody>
+</table>
+<p>Saldos são inteiros em <strong>centavos</strong>. Contas novas nascem com saldo <code>0</code>.</p>
+
+<h2>Listar e consultar</h2>
+<div class="endpoint"><span class="badge get">GET</span> <code>/v1/accounts</code></div>
+<div class="endpoint"><span class="badge get">GET</span> <code>/v1/accounts/{id}/balance</code></div>
+<p>Públicos: retornam IDs, tipos e saldos em claro.</p>
+
+<h2>Criar conta</h2>
+<div class="endpoint"><span class="badge post">POST</span> <code>/v1/accounts</code></div>
+<p>Somente em nó <strong>produtor</strong> (com validator key). Gera par Ed25519, assina create com o validador, coloca no mempool de creates e persiste a chave no keystore.</p>
+<pre><code>curl -s -X POST http://localhost/v1/accounts \
+  -H 'Content-Type: application/json' \
+  -d '{"id":"person_005","type":"person"}'</code></pre>
+<p>Resposta inclui <code>private_key</code> <strong>uma vez</strong> — guarde-a. Tipos aceitos: <code>person</code> | <code>merchant</code> (não treasury).</p>
+
+<div class="callout warn">
+  Follower sem <code>--validator-key</code> responde <code>403</code> em create.
+</div>
+
+<h2>Encerrar conta</h2>
+<div class="endpoint"><span class="badge delete">DELETE</span> <code>/v1/accounts/{id}</code></div>
+
+<h3>Person</h3>
+<ul>
+  <li>Somente nó validador.</li>
+  <li>Saldo residual vai para <code>destination</code> (opcional) ou treasury padrão do ledger.</li>
+  <li>Body: <code>{"destination":"person_002"}</code> (opcional).</li>
+</ul>
+
+<h3>Merchant</h3>
+<ul>
+  <li>Exige <code>X-Private-Key</code> (ou <code>?pkey=</code>) da própria conta.</li>
+  <li>Saldo deve ser <code>0</code>.</li>
+  <li>Sem destination.</li>
+</ul>
+
+<pre><code># Merchant (saldo zero)
+curl -s -X DELETE http://localhost/v1/accounts/merchant_002 \
+  -H 'Content-Type: application/json' \
+  -H 'X-Private-Key: &lt;pkey-base64&gt;' \
+  -d '{}'</code></pre>
+
+<h2>Ordem no bloco</h2>
+<p>O produtor inclui, nesta ordem: <strong>account creates → payments → account closes</strong>.</p>

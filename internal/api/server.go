@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -79,6 +80,13 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/v1/accounts", s.handleAccounts)
 	mux.HandleFunc("/v1/accounts/", s.handleAccount)
 	mux.Handle("/assets/", s.handleAssets())
+	mux.Handle("/v1/docs/", http.StripPrefix("/v1/docs/", http.FileServer(http.Dir("docs"))))
+	mux.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/v1/docs/", http.StatusFound)
+	})
+	mux.HandleFunc("/docs/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/v1/docs/"+strings.TrimPrefix(r.URL.Path, "/docs/"), http.StatusFound)
+	})
 	mux.Handle("/", s.handleStatic())
 	return loggingMiddleware(mux)
 }

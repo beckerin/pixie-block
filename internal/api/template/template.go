@@ -67,7 +67,7 @@ func ViewerPanel(data ViewerPanelData) string {
 
 func Balance(data BalanceData) string {
 	if data.Anonymous {
-		return ""
+		return `<!-- anonymous -->`
 	}
 	var buf bytes.Buffer
 	if err := balanceTmpl.ExecuteTemplate(&buf, "balance.html", data); err != nil {

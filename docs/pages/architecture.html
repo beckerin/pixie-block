@@ -1,0 +1,72 @@
+<h1>Arquitetura</h1>
+<p class="lead">Ledger PoA em Go: API HTTP, mempools, gossip P2P e persistência bbolt.</p>
+
+<div class="mermaid-wrap">
+  <pre class="mermaid">
+flowchart LR
+  Client --> API
+  API --> Mempool
+  API --> P2P
+  Validator --> Mempool
+  Validator --> Chain
+  Chain --> Storage
+  P2P --> Chain
+  </pre>
+</div>
+
+<h2>Componentes</h2>
+<table>
+  <thead>
+    <tr><th>Camada</th><th>Pacote</th><th>Papel</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>API REST + SSE</td><td><code>internal/api</code></td><td>HTTP, privacidade por viewer, UI templates SSE</td></tr>
+    <tr><td>Domain</td><td><code>internal/domain</code></td><td>Block, Account, Payment / Create / Close</td></tr>
+    <tr><td>Ledger</td><td><code>internal/ledger</code></td><td>Validação e aplicação de estado (impostos, closes)</td></tr>
+    <tr><td>Chain</td><td><code>internal/chain</code></td><td>Encadeamento, admit, índice de TXs</td></tr>
+    <tr><td>Mempool</td><td><code>internal/mempool</code></td><td>Pools de payments, creates e closes</td></tr>
+    <tr><td>PoA</td><td><code>internal/consensus/poa</code></td><td>Produção de blocos pelo validador</td></tr>
+    <tr><td>Storage</td><td><code>internal/storage/bolt</code></td><td>bbolt (<code>pixie.db</code>)</td></tr>
+    <tr><td>P2P</td><td><code>internal/p2p</code></td><td>TCP + JSON gossip / sync</td></tr>
+  </tbody>
+</table>
+
+<h2>Fluxo de uma payment</h2>
+<ol>
+  <li>Cliente <code>POST /v1/transactions</code> com payer, payee e items.</li>
+  <li>O nó assina com a chave do payer no <strong>keystore local</strong>.</li>
+  <li>A TX entra no mempool (com reserva de saldo) e é gossipada.</li>
+  <li>O produtor PoA monta um bloco (creates → payments → closes) e assina.</li>
+  <li>Peers validam e aplicam no ledger; estado persiste em bbolt.</li>
+</ol>
+
+<h2>Assinaturas</h2>
+<ul>
+  <li><strong>Ed25519</strong> para payments (payer), account create/close e blocos (validador).</li>
+  <li>Canonicalização em <code>internal/crypto</code>.</li>
+</ul>
+
+<h2>Front-end</h2>
+<p>
+  Explorer e templates da API usam <strong>somente HTML e HTMX</strong>.
+  É permitido carregar CDNs (Tailwind, <code>htmx-ext-sse</code>, etc.), com foco em
+  <strong>não escrever JavaScript de aplicação</strong> no repositório — preferir atributos HTMX,
+  respostas parciais do backend e SSE.
+</p>
+
+<h2>Estrutura do repositório</h2>
+<pre><code>cmd/server/         # Binário do nó
+config/             # genesis, keystore, validator-key, taxes
+docs/               # Esta documentação (servida em /v1/docs/)
+dist/               # Explorer HTMX
+internal/
+  api/              # REST + SSE
+  domain/
+  ledger/
+  chain/
+  mempool/
+  consensus/poa/
+  storage/bolt/
+  p2p/
+  node/
+tools/              # genkeys, loadgen</code></pre>

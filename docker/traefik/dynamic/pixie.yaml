@@ -1,0 +1,15 @@
+http:
+  routers:
+    pixie-api:
+      entryPoints:
+        - web
+      rule: PathPrefix(`/`)
+      service: pixie-api
+  services:
+    pixie-api:
+      loadBalancer:
+        sticky:
+          cookie:
+            name: pixie_sse
+        servers:
+          - url: http://follower:80
