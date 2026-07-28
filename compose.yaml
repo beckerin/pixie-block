@@ -5,9 +5,8 @@ services:
     image: traefik:v3.3
     command:
       - --api.dashboard=false
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --providers.docker.network=pixie
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
       - --entrypoints.web.address=:80
       - --metrics.prometheus=true
       - --metrics.prometheus.entrypoint=metrics
@@ -16,7 +15,7 @@ services:
     ports:
       - "${PIXIE_HTTP_PORT:-80}:80"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./docker/traefik/dynamic:/etc/traefik/dynamic:ro
     networks:
       - pixie
     healthcheck:
@@ -64,15 +63,6 @@ services:
         condition: service_healthy
     networks:
       - pixie
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=pixie
-      - traefik.http.routers.pixie-api.rule=PathPrefix(`/`)
-      - traefik.http.routers.pixie-api.entrypoints=web
-      - traefik.http.routers.pixie-api.service=pixie-api
-      - traefik.http.services.pixie-api.loadbalancer.server.port=80
-      - traefik.http.services.pixie-api.loadbalancer.sticky.cookie=true
-      - traefik.http.services.pixie-api.loadbalancer.sticky.cookie.name=pixie_sse
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
       interval: 5s
