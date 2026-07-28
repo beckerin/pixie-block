@@ -46,6 +46,14 @@ flowchart LR
   <li>Canonicalização em <code>internal/crypto</code>.</li>
 </ul>
 
+<h2>Front-end</h2>
+<p>
+  Explorer e templates da API usam <strong>somente HTML e HTMX</strong>.
+  É permitido carregar CDNs (Tailwind, <code>htmx-ext-sse</code>, etc.), com foco em
+  <strong>não escrever JavaScript de aplicação</strong> no repositório — preferir atributos HTMX,
+  respostas parciais do backend e SSE.
+</p>
+
 <h2>Estrutura do repositório</h2>
 <pre><code>cmd/server/         # Binário do nó
 config/             # genesis, keystore, validator-key, taxes

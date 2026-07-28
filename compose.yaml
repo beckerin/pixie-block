@@ -1,0 +1,135 @@
+name: pixie-block
+
+services:
+  traefik:
+    image: traefik:v3.3
+    command:
+      - --api.dashboard=false
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=pixie
+      - --entrypoints.web.address=:80
+      - --metrics.prometheus=true
+      - --metrics.prometheus.entrypoint=metrics
+      - --entrypoints.metrics.address=:8082
+      - --ping=true
+    ports:
+      - "${PIXIE_HTTP_PORT:-80}:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - pixie
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  validator:
+    build: .
+    image: pixie-block-node:local
+    environment:
+      PIXIE_ROLE: validator
+      PIXIE_NODE_ID: validator
+      PIXIE_CONFIG_DIR: /config
+      PIXIE_DATA_DIR: /data
+      PIXIE_BOLT_NOSYNC: "1"
+    volumes:
+      - pixie-config:/config
+      - validator-data:/data
+    networks:
+      - pixie
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+
+  follower:
+    build: .
+    image: pixie-block-node:local
+    environment:
+      PIXIE_ROLE: follower
+      PIXIE_CONFIG_DIR: /config
+      PIXIE_DATA_DIR: /data
+      PIXIE_PEER: validator:90
+      PIXIE_BOLT_NOSYNC: "1"
+    volumes:
+      - pixie-config:/config:ro
+      - /data
+    depends_on:
+      validator:
+        condition: service_healthy
+    networks:
+      - pixie
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=pixie
+      - traefik.http.routers.pixie-api.rule=Host(`${PIXIE_PUBLIC_HOST:-pixie.localhost}`) || HostRegexp(`{host:.+}`)
+      - traefik.http.routers.pixie-api.entrypoints=web
+      - traefik.http.routers.pixie-api.service=pixie-api
+      - traefik.http.services.pixie-api.loadbalancer.server.port=80
+      - traefik.http.services.pixie-api.loadbalancer.sticky.cookie=true
+      - traefik.http.services.pixie-api.loadbalancer.sticky.cookie.name=pixie_sse
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:0.3.0
+    environment:
+      CONTAINERS: 1
+      IMAGES: 1
+      NETWORKS: 1
+      VOLUMES: 1
+      POST: 1
+      EXEC: 1
+      INFO: 1
+      SYSTEM: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - pixie
+
+  autoscaler:
+    build: docker/autoscaler
+    environment:
+      DOCKER_HOST: tcp://docker-socket-proxy:2375
+      COMPOSE_FILE: /workspace/compose.yaml
+      COMPOSE_PROJECT_NAME: pixie-block
+      SCALE_SERVICE: follower
+      TRAEFIK_METRICS_URL: http://traefik:8082/metrics
+      METRICS_SERVICE_SUBSTR: pixie-api
+      MIN_REPLICAS: ${MIN_REPLICAS:-1}
+      MAX_REPLICAS: ${MAX_REPLICAS:-5}
+      SCALE_UP_RPS: ${SCALE_UP_RPS:-50}
+      SCALE_DOWN_RPS: ${SCALE_DOWN_RPS:-10}
+      EVAL_INTERVAL: ${EVAL_INTERVAL:-15s}
+      COOLDOWN: ${COOLDOWN:-60s}
+    volumes:
+      - .:/workspace
+    depends_on:
+      traefik:
+        condition: service_started
+      docker-socket-proxy:
+        condition: service_started
+      follower:
+        condition: service_healthy
+    networks:
+      - pixie
+
+networks:
+  pixie:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  pixie-config:
+  validator-data:

@@ -5,3 +5,4 @@ config/validator-key.json
 config/keystore.json
 main
 .vercel
+.env

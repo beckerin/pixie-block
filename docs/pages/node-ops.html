@@ -42,6 +42,18 @@ make run-cluster
 make test
 make clean        # remove bin/ data/</code></pre>
 
+<h2>Docker Compose + Traefik</h2>
+<p>Stack com validador fixo, réplicas <code>follower</code> atrás do Traefik e autoscaler por métricas Prometheus.</p>
+<pre><code>cp .env.example .env
+make docker-up
+curl -s http://127.0.0.1/health
+make docker-ps
+make docker-scale N=3   # scale manual
+make docker-load PIXIE_URL=http://127.0.0.1 N=1000 WORKERS=32
+make docker-down</code></pre>
+<p>Arquivos: <code>compose.yaml</code>, <code>Dockerfile</code>, <code>docker/entrypoint.sh</code>, <code>docker/autoscaler/</code>. O validador grava <code>genesis</code> no volume <code>pixie-config</code>; cada follower usa volume anônimo em <code>/data</code>.</p>
+<p>Autoscaler: <code>SCALE_UP_RPS</code> / <code>SCALE_DOWN_RPS</code> em <code>.env</code> (ver <code>.env.example</code>). Requer Docker no host (socket via <code>docker-socket-proxy</code>).</p>
+
 <h2>Keystore vs validator-key</h2>
 <ul>
   <li><strong>Keystore</strong>: assina payments pelo payer; login de conta no explorer; close de merchant.</li>

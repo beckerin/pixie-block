@@ -1,0 +1,9 @@
+.git
+.gitignore
+data
+main
+bin
+.env
+.vercel
+*.md
+.cursor

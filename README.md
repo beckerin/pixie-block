@@ -4,6 +4,16 @@ Blockchain customizada em Go para transações financeiras com repasse automáti
 
 **Documentação completa:** com o nó no ar, abra [`/v1/docs/`](http://localhost/v1/docs/) (visual estilo API Platform + OpenAPI/Scalar).
 
+## Front-end
+
+Política da UI do repositório (`dist/`, `internal/api/template/`):
+
+- **Apenas HTML e HTMX** — interação com o servidor via atributos HTMX, fragmentos HTML e SSE; sem SPA nem bundlers de JS.
+- **CDNs permitidas** — Tailwind CSS, `htmx-ext-sse` e extensões oficiais do HTMX, desde que consumidas por `<script src="…">` / `<link>` e **sem JavaScript de aplicação mantido no repo**.
+- **Não construir JS** — evitar lógica de UI em JavaScript próprio; quando algo parecer exigir script, preferir ajuste de API, templates no Go ou extensões HTMX já publicadas.
+
+A documentação estática em `docs/` é exceção (site de referência); o explorer e os painéis servidos pela API seguem a política acima.
+
 ## Arquitetura
 
 ```mermaid
@@ -77,6 +87,29 @@ make run-cluster
 
 - Nó 1 (produtor): API `:80`, P2P `:90`
 - Nó 2 (follower): API `:81`, P2P `:91` → peer `127.0.0.1:90`
+
+## Docker Compose + Traefik (auto-scaling)
+
+Stack com **validador fixo**, réplicas **follower** atrás do Traefik e **autoscaler** (métricas Prometheus → `docker compose up --scale`).
+
+```bash
+cp .env.example .env
+make docker-up
+curl -s http://127.0.0.1/health
+make docker-ps
+make docker-scale N=3    # scale manual das réplicas follower
+make docker-load PIXIE_URL=http://127.0.0.1 N=2000 WORKERS=32
+make docker-down
+```
+
+| Serviço | Função |
+|---------|--------|
+| `traefik` | Entrada HTTP `:80`, load balancer, sticky cookie (SSE) |
+| `validator` | Produtor PoA + seed P2P (rede interna) |
+| `follower` | API escalável; P2P → `validator:90` |
+| `autoscaler` | Ajusta réplicas conforme `SCALE_UP_RPS` / `SCALE_DOWN_RPS` |
+
+Arquivos: `compose.yaml`, `Dockerfile`, `docker/entrypoint.sh`, `docker/autoscaler/`.
 
 ## Contas de demonstração
 
