@@ -67,7 +67,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=pixie
-      - traefik.http.routers.pixie-api.rule=Host(`${PIXIE_PUBLIC_HOST:-pixie.localhost}`) || HostRegexp(`{host:.+}`)
+      - traefik.http.routers.pixie-api.rule=PathPrefix(`/`)
       - traefik.http.routers.pixie-api.entrypoints=web
       - traefik.http.routers.pixie-api.service=pixie-api
       - traefik.http.services.pixie-api.loadbalancer.server.port=80
@@ -125,6 +125,7 @@ services:
 
 networks:
   pixie:
+    name: pixie
     driver: bridge
     ipam:
       config:
